@@ -4,6 +4,12 @@
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
+
+        <PackageId>FluentBlazorRouter</PackageId>
+        <Version>0.0.1</Version>
+        <Authors>Darkarotte</Authors>
+
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     </PropertyGroup>
 
 
