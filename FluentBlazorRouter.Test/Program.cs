@@ -10,7 +10,7 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 
 builder.Services.AddFluentRouting<FluentBlazorRouter.Test.Pages.Index>(rootBuilder => rootBuilder
-    .WithPage<Counter>("counter")
+    .WithPage<Counter>("counter/{Id:int}")
     .WithGroup("group/example", exampleGroupBuilder =>
     {
         exampleGroupBuilder.WithPage<FetchData>("fetchdata");

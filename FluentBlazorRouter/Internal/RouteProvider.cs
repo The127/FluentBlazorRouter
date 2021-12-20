@@ -10,8 +10,17 @@ public sealed class RouteProvider : IRouteProvider
     public RouteProvider(RouteGroupBuilder rootGroupBuilder)
     {
         _routes = rootGroupBuilder.BuildRoutes();
+        ValidateRoutes();
     }
-    
+
+    private void ValidateRoutes()
+    {
+        foreach (var route in _routes)
+        {
+            route.Validate();
+        }
+    }
+
     public bool TryMatch(string relativeUri, out Dictionary<string, object> routeValues, [NotNullWhen(true)] out Type? pageType)
     {
         pageType = null;
@@ -39,6 +48,7 @@ public sealed class RouteProvider : IRouteProvider
             if (routeVar.PageType == pageType)
             {
                 route = routeVar.FullRoute;
+                return true;
             }
         }
 

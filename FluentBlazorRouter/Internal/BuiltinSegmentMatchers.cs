@@ -1,17 +1,17 @@
 ﻿namespace FluentBlazorRouter.Internal;
 
-internal class StringSegmentMatcher : ISegmentMatcher
+internal class StringSegmentMatcher : SegmentMatcherBase<string>
 {
-    public bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object segmentValue)
     {
         segmentValue = segment;
         return true;
     }
 }
 
-internal class ByteSegmentMatcher : ISegmentMatcher
+internal class ByteSegmentMatcher : SegmentMatcherBase<byte>
 {
-    public bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object segmentValue)
     {
         if (byte.TryParse(segment, out var value))
         {
@@ -24,9 +24,9 @@ internal class ByteSegmentMatcher : ISegmentMatcher
     }
 }
 
-internal class ShortSegmentMatcher : ISegmentMatcher
+internal class ShortSegmentMatcher : SegmentMatcherBase<short>
 {
-    public bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object segmentValue)
     {
         if (short.TryParse(segment, out var value))
         {
@@ -39,9 +39,9 @@ internal class ShortSegmentMatcher : ISegmentMatcher
     }
 }
 
-internal class IntSegmentMatcher : ISegmentMatcher
+internal class IntSegmentMatcher : SegmentMatcherBase<int>
 {
-    public bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object segmentValue)
     {
         if (int.TryParse(segment, out var value))
         {
@@ -54,9 +54,9 @@ internal class IntSegmentMatcher : ISegmentMatcher
     }
 }
 
-internal class LongSegmentMatcher : ISegmentMatcher
+internal class LongSegmentMatcher : SegmentMatcherBase<long>
 {
-    public bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object segmentValue)
     {
         if (long.TryParse(segment, out var value))
         {
@@ -69,9 +69,9 @@ internal class LongSegmentMatcher : ISegmentMatcher
     }
 }
 
-internal class FloatSegmentMatcher : ISegmentMatcher
+internal class FloatSegmentMatcher : SegmentMatcherBase<float>
 {
-    public bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object segmentValue)
     {
         if (float.TryParse(segment, out var value))
         {
@@ -84,9 +84,9 @@ internal class FloatSegmentMatcher : ISegmentMatcher
     }
 }
 
-internal class DoubleSegmentMatcher : ISegmentMatcher
+internal class DoubleSegmentMatcher : SegmentMatcherBase<double>
 {
-    public bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object segmentValue)
     {
         if (double.TryParse(segment, out var value))
         {
@@ -99,9 +99,9 @@ internal class DoubleSegmentMatcher : ISegmentMatcher
     }
 }
 
-internal class GuidSegmentMatcher : ISegmentMatcher
+internal class GuidSegmentMatcher : SegmentMatcherBase<Guid>
 {
-    public bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object segmentValue)
     {
         if (Guid.TryParse(segment, out var value))
         {

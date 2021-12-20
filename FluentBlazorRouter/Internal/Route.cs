@@ -17,4 +17,9 @@ internal sealed record Route
 
     public bool Matches(string relativeUri, Dictionary<string, object> routeValues) =>
         _routeMatcher.Matches(relativeUri, routeValues);
+
+    public void Validate()
+    {
+        _routeMatcher.Validate(PageType);
+    }
 }

@@ -1,4 +1,6 @@
-﻿namespace FluentBlazorRouter.Internal;
+﻿using System.Text.RegularExpressions;
+
+namespace FluentBlazorRouter.Internal;
 
 internal sealed class RouteMatcherCompiler
 {
@@ -17,13 +19,30 @@ internal sealed class RouteMatcherCompiler
         {
             if (segment.StartsWith("{"))
             {
-                var parts = segment[1..^1].Split(":");
+                if (!Regex.IsMatch(segment, "{[a-zA-Z]+(:[a-zA-Z]+)?}"))
+                {
+                    throw new Exception($"Route segment error in '{fullRoute}' at '{segment}'.");
+                }
 
-                var segmentMatcherKey = parts[0];
-                var segmentPropertyName = parts[1];
+                if (segment.Contains(':'))
+                {
+                    var parts = segment[1..^1].Split(":");
 
-                var matcher = _fluentRouterOptions.SegmentMatchers[segmentMatcherKey];
-                segmentMatchers.Add(new SegmentMatcherHandler(matcher, segmentPropertyName));
+                    var segmentMatcherKey = parts[1];
+                    var segmentPropertyName = parts[0];
+
+                    if (!_fluentRouterOptions.SegmentMatchers.TryGetValue(segmentMatcherKey, out var matcher))
+                    {
+                        throw new Exception($"No matcher registered for key '{segmentMatcherKey}'.");
+                    }
+                    
+                    segmentMatchers.Add(new SegmentMatcherHandler(matcher, segmentPropertyName));
+                }
+                // default to string if no type was provided
+                else
+                {
+                    segmentMatchers.Add(new SegmentMatcherHandler(_fluentRouterOptions.SegmentMatchers["string"], segment));
+                }
             }
             else
             {

@@ -1,4 +1,7 @@
-﻿namespace FluentBlazorRouter.Internal;
+﻿using System.Reflection;
+using Microsoft.AspNetCore.Components;
+
+namespace FluentBlazorRouter.Internal;
 
 internal sealed class RouteMatcher
 {
@@ -51,5 +54,22 @@ internal sealed class RouteMatcher
         }
         
         return true;
+    }
+
+    internal void Validate(Type pageType)
+    {
+        foreach (var segmentMatcherHandler in _segmentMatchers)
+        {
+            if (segmentMatcherHandler.Matcher is null)
+            {
+                continue;
+            }
+
+            var propertyInfo = pageType.GetProperty(segmentMatcherHandler.SegmentPropertyName);
+            if (propertyInfo?.PropertyType != segmentMatcherHandler.Matcher.MatchType || propertyInfo.GetCustomAttribute<ParameterAttribute>() is null)
+            {
+                throw new Exception($"No property '{segmentMatcherHandler.SegmentPropertyName}' with a parameter attribute in page '{pageType.FullName}' of type '{segmentMatcherHandler.Matcher.MatchType.FullName}' has been found.");
+            }
+        }
     }
 }
