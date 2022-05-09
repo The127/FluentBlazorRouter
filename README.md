@@ -22,7 +22,7 @@ Here are the builtin route parameter types:
 - int
 - short
 - byte
-- Guid
+- guid
 
 You can extend these yourself in the *IServiceCollection* extension method.
 (See below)
@@ -114,6 +114,34 @@ builder.Services.AddFluentRouting<FluentBlazorRouter.Test.Pages.Index>(...),// r
         optionsBuilder.AddSegmentMatcher("custom", new CustomMatcher());
     });
 ```
+
+### Router Middlewares
+
+The router is capable of executing middlewares for additional routing decision making and logging.
+This can be used to implement custom validation and/or permission logic.
+
+To add a middleware simply implement the *IRouterMiddlware* interface and make sure to call *next()* to execute the next middleware.
+Not calling *next()* will result in rendering the *PageNotFound* template. 
+
+```c#
+public class MyMiddleware : IRouterMiddleware
+{
+    public void Execute(Action next, RouteData pageContext)
+    {
+        if (pageContext.PageType != typeof(FetchData))
+        {
+            next();
+        }
+    }
+}
+```
+
+And this in your *Program.cs*:
+
+```c#
+builder.Services.AddTransient<IRouterMiddleware, MyMiddleware>();
+```
+
 ## Feedback
 
 If you have any feedback, please reach out to me on Discord Darkarotte#8994.

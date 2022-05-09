@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections;
+using System.ComponentModel;
 using System.Web;
 using FluentBlazorRouter.Internal;
 using Microsoft.AspNetCore.Components;
@@ -24,6 +25,8 @@ public sealed class FluentRouter : IComponent, IHandleAfterRender, IDisposable
 
     [Inject] private IRouteProvider RouteProvider { get; set; } = null!;
     [Inject] private INavigationInterception NavigationInterception { get; set; } = null!;
+
+    [Inject] private IServiceProvider ServiceProvider { get; set; } = null!;
 
 
     void IComponent.Attach(RenderHandle renderHandle)
@@ -52,16 +55,40 @@ public sealed class FluentRouter : IComponent, IHandleAfterRender, IDisposable
 
         if (RouteProvider.TryMatch(relativeUri, out var routeValues,out var pageType))
         {
+            var middlewares = (IEnumerable<IRouterMiddleware>)(ServiceProvider.GetService(typeof(IEnumerable<IRouterMiddleware>)) ?? Enumerable.Empty<IRouterMiddleware>());
+
             var routeData = new RouteData(
                 pageType,
                 routeValues
             );
-            _renderHandle.Render(Found(routeData));
+            
+            var renderPage = true;
+            foreach (var routerMiddleware in middlewares)
+            {
+                var executeNext = false;
+
+                void NextCallback()
+                {
+                    executeNext = true;
+                }
+
+                routerMiddleware.Execute(NextCallback, routeData);
+
+                if (!executeNext)
+                {
+                    renderPage = false;
+                    break;
+                }
+            }
+
+            if (renderPage)
+            {
+                _renderHandle.Render(Found(routeData));
+                return;
+            }
         }
-        else
-        {
-            _renderHandle.Render(NotFound);
-        }
+        
+        _renderHandle.Render(NotFound);
     }
 
     Task IComponent.SetParametersAsync(ParameterView parameters)

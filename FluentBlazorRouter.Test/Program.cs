@@ -1,4 +1,5 @@
 using FluentBlazorRouter;
+using FluentBlazorRouter.Test;
 using FluentBlazorRouter.Test.Data;
 using FluentBlazorRouter.Test.Pages;
 
@@ -15,6 +16,8 @@ builder.Services.AddFluentRouting<FluentBlazorRouter.Test.Pages.Index>(rootBuild
     {
         exampleGroupBuilder.WithPage<FetchData>("fetchdata");
     }));
+
+builder.Services.AddTransient<IRouterMiddleware, TestMiddleware>();
 
 var app = builder.Build();
 
