@@ -10,6 +10,7 @@ public class RouteGroupBuilder
     private readonly string _pathSegment;
 
     private readonly List<RouteGroupBuilder> _subGroupBuilders = new();
+    private Dictionary<Type, object> _metadata = new();
 
     internal RouteGroupBuilder(string pathSegment, Type? pageType, RouteMatcherCompiler routeMatcherCompiler)
     {
@@ -27,32 +28,41 @@ public class RouteGroupBuilder
 
     private RouteGroupBuilder WithSubRoute(Type? pageType, string pagePathSegment, Action<RouteGroupBuilder>? subGroupConfigurationAction)
     {
-        var subRouteGroupBuilder = new RouteGroupBuilder(pagePathSegment, pageType, _routeMatcherCompiler);
+        var subRouteGroupBuilder = new RouteGroupBuilder(pagePathSegment.Trim('/'), pageType, _routeMatcherCompiler);
         _subGroupBuilders.Add(subRouteGroupBuilder);
         
         subGroupConfigurationAction?.Invoke(subRouteGroupBuilder);
         return this;
     }
 
-    private void BuildRoutes(string parentPath, List<Route> routeList)
+    private void BuildRoutes(string parentPath, List<Route> routeList, Route? parent)
     {
         var thisPath = parentPath + "/" + _pathSegment;
         
+        var route = parent;
         if (_pageType is not null)
         {
-            routeList.Add(new Route(thisPath.TrimStart('/'), _pageType, _routeMatcherCompiler));
+            route = new Route(thisPath.TrimStart('/'), _pageType, _routeMatcherCompiler, _metadata, parent);
+            routeList.Add(route);
         }
 
         foreach (var subRouteGroupBuilder in _subGroupBuilders)
         {
-            subRouteGroupBuilder.BuildRoutes(thisPath.TrimStart('/'), routeList);
+            subRouteGroupBuilder.BuildRoutes(thisPath.TrimStart('/'), routeList, route);
         }
+    }
+    
+    public RouteGroupBuilder WithMetadata<T>(T metadata)
+        where T : notnull
+    {
+        _metadata.Add(typeof(T), metadata);
+        return this;
     }
 
     internal IReadOnlyCollection<Route> BuildRoutes()
     {
         var result = new List<Route>();
-        BuildRoutes("", result);
+        BuildRoutes("", result, null);
         return result;
     }
 }

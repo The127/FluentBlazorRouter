@@ -1,0 +1,52 @@
+﻿@using FluentBlazorRouter.Internal
+<h3>
+    <a onclick="history.back()">back</a>
+    @foreach (var breadcrumb in _breadcrumbs)
+    {
+        <span> | </span><a href="@breadcrumb.url">@breadcrumb.text</a>
+    }
+</h3>
+
+@code {
+
+    private (string text, string url)[] _breadcrumbs = Array.Empty<(string, string)>();
+
+    [Inject]
+    public IRouteProvider RouteProvider { get; set; } = null!;
+
+    [Inject]
+    public NavigationManager NavigationManager { get; set; } = null!;
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        NavigationManager.LocationChanged += NavigationManagerOnLocationChanged;
+        DetermineBreadCrumbs(NavigationManager.ToBaseRelativePath(NavigationManager.Uri));
+    }
+
+    private void NavigationManagerOnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        DetermineBreadCrumbs(NavigationManager.ToBaseRelativePath(e.Location));
+    }
+
+    private void DetermineBreadCrumbs(string relativeLocation)
+    {
+        if (!RouteProvider.TryMatch(relativeLocation, out var routeValues, out var pageType)) return;
+        if (!RouteProvider.TryGetRouteData(pageType, out var routeData)) return;
+
+        var breadcrumbs = new List<(string, string)>();
+
+        do
+        {
+            var breadcrumbText = routeData.GetMetadata<string>();
+            breadcrumbs.Add((breadcrumbText, routeData.FullRoute.ApplyRouteValues(routeValues)));
+            routeData = routeData.Parent;
+        } while (routeData is not null);
+
+        breadcrumbs.Reverse();
+        _breadcrumbs = breadcrumbs.ToArray();
+
+        InvokeAsync(StateHasChanged);
+    }
+
+}

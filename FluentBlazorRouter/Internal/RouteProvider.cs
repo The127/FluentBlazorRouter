@@ -37,9 +37,11 @@ public sealed class RouteProvider : IRouteProvider
         return false;
     }
 
-    public bool TryGetPageRoute<TPage>([NotNullWhen(true)] out string? route) 
-        where TPage : IComponent => 
-        TryGetPageRoute(typeof(TPage), out route);
+    public bool TryGetRouteData(Type pageType, out Route? route)
+    {
+        route = _routes.FirstOrDefault(x => x.PageType == pageType);
+        return route is not null;
+    }
 
     public bool TryGetPageRoute(Type pageType, [NotNullWhen(true)] out string? route)
     {
