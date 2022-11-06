@@ -1,4 +1,5 @@
-﻿using FluentBlazorRouter.Internal;
+﻿using System.Diagnostics.CodeAnalysis;
+using FluentBlazorRouter.Internal;
 
 namespace FluentBlazorRouter;
 
@@ -29,8 +30,12 @@ public sealed record Route
         _routeMatcher.Validate(PageType);
     }
     
-    public T GetMetadata<T>()
-    {
-        return (T)_metadata[typeof(T)];
-    }
+    [Obsolete("Use TryGetMetadata instead")]
+    public T GetMetadata<T>() => (T)_metadata[typeof(T)];
+
+    public bool TryGetMetadata<T>([NotNullWhen(true)] out T? metadata)
+        => TryGetMetadata(typeof(T), out var value) & (metadata = (T?)value) != null;
+    
+    public bool TryGetMetadata(Type metadataType, [NotNullWhen(true)] out object? metadata)
+        => _metadata.TryGetValue(metadataType, out metadata);
 }

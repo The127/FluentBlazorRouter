@@ -3,7 +3,8 @@
     <a onclick="history.back()">back</a>
     @foreach (var breadcrumb in _breadcrumbs)
     {
-        <span> | </span><a href="@breadcrumb.url">@breadcrumb.text</a>
+        <span> | </span>
+        <a href="@breadcrumb.url">@breadcrumb.text</a>
     }
 </h3>
 
@@ -38,8 +39,11 @@
 
         do
         {
-            var breadcrumbText = routeData.GetMetadata<string>();
-            breadcrumbs.Add((breadcrumbText, routeData.FullRoute.ApplyRouteValues(routeValues)));
+            if (routeData.TryGetMetadata<string>(out var breadcrumbText))
+            {
+                var breadcrumbUrl = routeData.FullRoute.ApplyRouteValues(routeValues);
+                breadcrumbs.Add((breadcrumbText, breadcrumbUrl));
+            }
             routeData = routeData.Parent;
         } while (routeData is not null);
 
