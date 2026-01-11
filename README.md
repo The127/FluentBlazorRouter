@@ -4,6 +4,39 @@
 FluentBlazorRouter is an alternative router for blazor applications.
 It allows you to use dynamic groups and nesting instead of using hardcoded compile time constatnts to route to your amazing blazor pages.
 And all that without repeating yourself! (The future is now!)
+
+# NOTICE! This library was primarily written for .net 7 and 8
+
+If you are using .net 10 or newer just replacing the router in the App.razor file doens't work anymore.
+Instead you will need to add a single "RoutedPage" with an `@page` attribute (and also remove the layout from the new `Routes.razor` file or it will render that twice) like so:
+
+```c#
+@page "/"
+@page "/{**path}"
+
+@using FluentBlazorRouter
+
+<FluentRouter>
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+    </Found>
+    <NotFound>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <p>Not found</p>
+        </LayoutView>
+    </NotFound>
+</FluentRouter>
+
+@code {
+    // not used but required
+    [Parameter]
+    public string Path { get; set; }
+}
+```
+
+This page will essentially work like the old App.razor file and take care of routing.
+The rest is as explained below. :)
+
 ## Features
 
 - central route configuration, no more hopping around in multiple files
