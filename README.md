@@ -7,6 +7,8 @@ And all that without repeating yourself! (The future is now!)
 
 # NOTICE! This library was primarily written for .net 7 and 8
 
+For a full working example see the `net10example` folder and its project.
+
 If you are using .net 10 or newer just replacing the router in the App.razor file doens't work anymore.
 Instead you will need to add a single "RoutedPage" with an `@page` attribute (and also remove the layout from the new `Routes.razor` file or it will render that twice) like so:
 
