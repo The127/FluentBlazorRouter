@@ -17,19 +17,18 @@ internal sealed class RouteMatcherCompiler
 
         foreach (var segment in fullRoute.Split("/"))
         {
-            if (segment.StartsWith("{"))
-            {
-                if (!Regex.IsMatch(segment, "{[a-zA-Z]+(:[a-zA-Z]+)?}"))
+            if (segment.StartsWith("{")) {
+                var match = Regex.Match(segment, "^{(?<parameter>[a-zA-Z]+)(?::(?<type>[a-zA-Z]+))?}$");
+                if (!match.Success)
                 {
                     throw new Exception($"Route segment error in '{fullRoute}' at '{segment}'.");
                 }
+                
+                // Check the segment is {Parameter:Type}
+                if (match.Groups["type"].Length > 0) {
 
-                if (segment.Contains(':'))
-                {
-                    var parts = segment[1..^1].Split(":");
-
-                    var segmentMatcherKey = parts[1];
-                    var segmentPropertyName = parts[0];
+                    var segmentMatcherKey = match.Groups["type"].Value;
+                    var segmentPropertyName = match.Groups["parameter"].Value;
 
                     if (!_fluentRouterOptions.SegmentMatchers.TryGetValue(segmentMatcherKey, out var matcher))
                     {
@@ -41,7 +40,7 @@ internal sealed class RouteMatcherCompiler
                 // default to string if no type was provided
                 else
                 {
-                    segmentMatchers.Add(new SegmentMatcherHandler(_fluentRouterOptions.SegmentMatchers["string"], segment));
+                    segmentMatchers.Add(new SegmentMatcherHandler(_fluentRouterOptions.SegmentMatchers["string"], match.Groups["parameter"].Value));
                 }
             }
             else
