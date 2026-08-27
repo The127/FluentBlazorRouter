@@ -11,24 +11,24 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<WeatherForecastService>();
 
 builder.Services.AddFluentRouting<FluentBlazorRouter.Test.Pages.Index>(
-    rootBuilder =>
-    {
+    rootBuilder => {
         rootBuilder
             .WithMetadata("Home")
-            .WithPage<Counter>("counter/{Id:int}", groupBuilder =>
-            {
+            .WithPage<Counter>("counter/{Id:int}", groupBuilder => {
                 groupBuilder
                     .WithMetadata("Counter")
-                    .WithPage<CounterSubPage>("/subpage", subPageBuilder =>
-                    {
+                    .WithPage<CounterSubPage>("/subpage", subPageBuilder => {
                         subPageBuilder.WithMetadata("SubPage");
                     });
             })
-            .WithGroup("group/example", exampleGroupBuilder =>
-            {
+            .WithGroup("group/example", exampleGroupBuilder => {
                 exampleGroupBuilder
                     .WithPage<FetchData>("fetchdata", groupBuilder => { groupBuilder.WithMetadata("Fetch Data"); });
-            });
+            })
+            .WithPage<StringParameter>("stringParamWithType/{ActiveTab:string}")
+            .WithPage<StringParameter>("stringParamWithoutType/{ActiveTab}");
+
+
     });
 
 builder.Services.AddTransient<IRouterMiddleware, TestMiddleware>();
