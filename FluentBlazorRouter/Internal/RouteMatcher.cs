@@ -101,6 +101,29 @@ internal sealed class RouteMatcher
         return underlying is null ? type.FullName ?? type.Name : (underlying.FullName ?? underlying.Name) + "?";
     }
 
+    internal string BuildUrl(IReadOnlyDictionary<string, object?> routeValues)
+    {
+        var segments = new List<string>(_segmentMatchers.Count);
+
+        foreach (var segmentMatcherHandler in _segmentMatchers)
+        {
+            if (segmentMatcherHandler.Matcher is null)
+            {
+                segments.Add(segmentMatcherHandler.SegmentPropertyName);
+                continue;
+            }
+
+            if (!routeValues.TryGetValue(segmentMatcherHandler.SegmentPropertyName, out var value))
+            {
+                throw new InvalidOperationException($"No route value provided for '{segmentMatcherHandler.SegmentPropertyName}'.");
+            }
+
+            segments.Add(segmentMatcherHandler.Matcher.FormatValue(value));
+        }
+
+        return string.Join("/", segments);
+    }
+
     internal void Validate(Type pageType)
     {
         foreach (var segmentMatcherHandler in _segmentMatchers)

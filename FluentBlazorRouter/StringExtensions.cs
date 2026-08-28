@@ -5,6 +5,7 @@ namespace FluentBlazorRouter;
 
 public static class StringExtensions
 {
+    [Obsolete("Use Route.BuildUrl instead. This overload cannot reach the route's segment matchers, so it cannot format values that do not round trip through ToString.")]
     public static string ApplyRouteValues(this string route, Dictionary<string, object?> routeValues)
     {
         if (routeValues is null)
