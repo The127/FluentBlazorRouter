@@ -39,6 +39,19 @@ public class StringExtensionsTests
         => "group/example".ApplyRouteValues(new Dictionary<string, object>())
             .ShouldBe("group/example");
 
+    [Theory]
+    [InlineData("page/{Page2:int}", "Page2")]
+    [InlineData("page/{My_Id:int}", "My_Id")]
+    [InlineData("page/{_leading}", "_leading")]
+    [InlineData("page/{Größe:int}", "Größe")]
+    public void ApplyRouteValues_Dictionary_SubstitutesNamesWithDigitsOrUnderscores(string route, string key)
+        => route.ApplyRouteValues(new Dictionary<string, object> { [key] = 7 }).ShouldBe("page/7");
+
+    [Fact]
+    public void ApplyRouteValues_Dictionary_IgnoresNamesTheCompilerWouldReject()
+        => "user/{1id}".ApplyRouteValues(new Dictionary<string, object> { ["1id"] = 3 })
+            .ShouldBe("user/{1id}");
+
     [Fact]
     public void ApplyRouteValues_Positional_SubstitutesByIndex()
         => "user/{0}/post/{1}".ApplyRouteValues("alice", 3).ShouldBe("user/alice/post/3");

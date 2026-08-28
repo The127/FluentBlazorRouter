@@ -16,8 +16,22 @@ public sealed class FluentRouterConfigurationOptionsBuilder
         {"guid", new GuidSegmentMatcher()},
     };
 
-    public void AddSegmentMatcher(string segmentIdentifier, ISegmentMatcher segmentMatcher) =>
+    public void AddSegmentMatcher(string segmentIdentifier, ISegmentMatcher segmentMatcher)
+    {
+        if (segmentIdentifier is null)
+        {
+            throw new ArgumentNullException(nameof(segmentIdentifier));
+        }
+
+        if (!SegmentSyntax.IsIdentifier(segmentIdentifier))
+        {
+            throw new ArgumentException(
+                $"Segment matcher key '{segmentIdentifier}' cannot be used in a route. Keys must start with a letter or underscore and contain only letters, digits and underscores.",
+                nameof(segmentIdentifier));
+        }
+
         _segmentMatchers[segmentIdentifier] = segmentMatcher;
+    }
 
     internal FluentRouterOptions BuildConfiguration() =>
         new FluentRouterOptions(new Dictionary<string, ISegmentMatcher>(_segmentMatchers));

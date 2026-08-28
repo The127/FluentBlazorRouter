@@ -1,4 +1,5 @@
 ﻿using System.Text.RegularExpressions;
+using FluentBlazorRouter.Internal;
 
 namespace FluentBlazorRouter;
 
@@ -8,7 +9,7 @@ public static class StringExtensions
     {
         // replace identifiers in route with values from routeValues
         // e.g. /user/{id:int} with routeValues = { id = 1 } => /user/1
-        var regex = new Regex(@"\{\s*(?<key>\w+)\s*(?:\:\s*(?<type>\w+)\s*)?\}");
+        var regex = new Regex($@"\{{\s*(?<key>{SegmentSyntax.Identifier})\s*(?:\:\s*(?<type>{SegmentSyntax.Identifier})\s*)?\}}");
         var result = regex.Replace(route, m =>
         {
             var key = m.Groups["key"].Value;
