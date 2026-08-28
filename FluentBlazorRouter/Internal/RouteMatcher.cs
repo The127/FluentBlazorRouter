@@ -65,8 +65,8 @@ internal sealed class RouteMatcher
                 continue;
             }
 
-            var propertyInfo = pageType.GetProperty(segmentMatcherHandler.SegmentPropertyName);
-            if (propertyInfo?.PropertyType != segmentMatcherHandler.Matcher.MatchType || propertyInfo.GetCustomAttribute<ParameterAttribute>() is null)
+            var propertyInfo = pageType.GetProperty(segmentMatcherHandler.SegmentPropertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy);
+            if (propertyInfo == null || (Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType) != segmentMatcherHandler.Matcher.MatchType || propertyInfo.GetCustomAttribute<ParameterAttribute>() is null) 
             {
                 throw new Exception($"No property '{segmentMatcherHandler.SegmentPropertyName}' with a parameter attribute in page '{pageType.FullName}' of type '{segmentMatcherHandler.Matcher.MatchType.FullName}' has been found.");
             }
