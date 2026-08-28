@@ -1,0 +1,42 @@
+name: Dependabot auto-merge
+
+# pull_request_target runs the workflow from the base branch with a writable token. This
+# job never checks out the pull request's code, so untrusted changes cannot influence it.
+#
+# Auto-merge only waits for anything while master requires a status check. Without that,
+# GitHub merges as soon as the pull request is mergeable, green or not.
+
+on:
+  pull_request_target:
+    branches: [ master ]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-merge:
+    if: github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Fetch update metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v2
+
+      # Only nuget. Bumps to the actions themselves are left for a human, because they run
+      # in privileged workflows, including the trusted publishing step in release.yml.
+      #
+      # For a grouped pull request update-type is the highest change across the group, so a
+      # group containing a major update is left for a human too.
+      #
+      # This is an allowlist, so an unrecognised ecosystem auto-merges nothing.
+      - name: Enable auto-merge for patch and minor updates
+        if: |
+          steps.metadata.outputs.package-ecosystem == 'nuget' &&
+          (steps.metadata.outputs.update-type == 'version-update:semver-patch' ||
+           steps.metadata.outputs.update-type == 'version-update:semver-minor')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: gh pr merge --auto --merge "$PR_URL"
