@@ -63,14 +63,57 @@ public class RouteMatcherValidateTests
             .Message.ShouldContain("No property 'Id'");
 
     [Fact]
-    public void Validate_NullableMatchTypeWithNullableProperty_ThrowsToday_Regression()
+    public void Validate_NullableMatchTypeWithNullableProperty_DoesNotThrow()
     {
         var builder = new FluentRouterConfigurationOptionsBuilder();
         builder.AddSegmentMatcher("nint", new NullableIntSegmentMatcher());
         var matcher = new RouteMatcherCompiler(builder.BuildConfiguration()).Compile("counter/{Id:nint}");
 
-        Should.Throw<Exception>(() => matcher.Validate(typeof(NullableIntParameterPage)))
+        Should.NotThrow(() => matcher.Validate(typeof(NullableIntParameterPage)));
+    }
+
+    [Fact]
+    public void Validate_NullableMatchTypeWithNonNullableProperty_Throws()
+    {
+        var builder = new FluentRouterConfigurationOptionsBuilder();
+        builder.AddSegmentMatcher("nint", new NullableIntSegmentMatcher());
+        var matcher = new RouteMatcherCompiler(builder.BuildConfiguration()).Compile("counter/{Id:nint}");
+
+        Should.Throw<Exception>(() => matcher.Validate(typeof(IntParameterPage)))
             .Message.ShouldContain("No property 'Id'");
+    }
+
+    [Fact]
+    public void Validate_NullableMatchTypeWithWrongProperty_Throws()
+    {
+        var builder = new FluentRouterConfigurationOptionsBuilder();
+        builder.AddSegmentMatcher("nint", new NullableIntSegmentMatcher());
+        var matcher = new RouteMatcherCompiler(builder.BuildConfiguration()).Compile("counter/{Id:nint}");
+
+        Should.Throw<Exception>(() => matcher.Validate(typeof(WrongTypePage)))
+            .Message.ShouldContain("No property 'Id'");
+    }
+
+    [Fact]
+    public void Validate_MatcherWithNullMatchType_Throws()
+    {
+        var builder = new FluentRouterConfigurationOptionsBuilder();
+        builder.AddSegmentMatcher("bad", new NullMatchTypeSegmentMatcher());
+        var matcher = new RouteMatcherCompiler(builder.BuildConfiguration()).Compile("counter/{Id:bad}");
+
+        Should.Throw<Exception>(() => matcher.Validate(typeof(IntParameterPage)))
+            .Message.ShouldContain("No property 'Id'");
+    }
+
+    private sealed class NullMatchTypeSegmentMatcher : ISegmentMatcher
+    {
+        public Type MatchType => null!;
+
+        public bool MatchSegment(string segment, out object segmentValue)
+        {
+            segmentValue = 0;
+            return true;
+        }
     }
 
     private sealed class NullableIntSegmentMatcher : SegmentMatcherBase<int?>

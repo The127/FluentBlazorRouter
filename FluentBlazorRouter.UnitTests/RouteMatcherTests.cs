@@ -59,6 +59,44 @@ public class RouteMatcherTests
     }
 
     [Fact]
+    public void Matches_NullableMatcherYieldingNull_StoresNull()
+    {
+        var builder = new FluentRouterConfigurationOptionsBuilder();
+        builder.AddSegmentMatcher("optint", new OptionalIntSegmentMatcher());
+        var matcher = new RouteMatcherCompiler(builder.BuildConfiguration()).Compile("counter/{Id:optint}");
+        var routeValues = new Dictionary<string, object>();
+
+        Should.NotThrow(() => matcher.Validate(typeof(NullableIntParameterPage)));
+
+        matcher.Matches("counter/none", routeValues).ShouldBeTrue();
+        routeValues["Id"].ShouldBeNull();
+
+        routeValues.Clear();
+        matcher.Matches("counter/5", routeValues).ShouldBeTrue();
+        routeValues["Id"].ShouldBe(5);
+    }
+
+    private sealed class OptionalIntSegmentMatcher : SegmentMatcherBase<int?>
+    {
+        public override bool MatchSegment(string segment, out object segmentValue)
+        {
+            segmentValue = null!;
+            if (segment == "none")
+            {
+                return true;
+            }
+
+            if (!int.TryParse(segment, out var value))
+            {
+                return false;
+            }
+
+            segmentValue = value;
+            return true;
+        }
+    }
+
+    [Fact]
     public void Matches_ExistingRouteValues_AreOverwrittenOnSuccess()
     {
         var routeValues = new Dictionary<string, object> { ["Id"] = 1 };

@@ -56,6 +56,10 @@ internal sealed class RouteMatcher
         return true;
     }
 
+    private static bool AcceptsMatchType(Type propertyType, Type? matchType)
+        => matchType is not null
+           && (propertyType == matchType || Nullable.GetUnderlyingType(propertyType) == matchType);
+
     internal void Validate(Type pageType)
     {
         foreach (var segmentMatcherHandler in _segmentMatchers)
@@ -66,9 +70,11 @@ internal sealed class RouteMatcher
             }
 
             var propertyInfo = pageType.GetProperty(segmentMatcherHandler.SegmentPropertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy);
-            if (propertyInfo == null || (Nullable.GetUnderlyingType(propertyInfo.PropertyType) ?? propertyInfo.PropertyType) != segmentMatcherHandler.Matcher.MatchType || propertyInfo.GetCustomAttribute<ParameterAttribute>() is null) 
+            if (propertyInfo == null
+                || !AcceptsMatchType(propertyInfo.PropertyType, segmentMatcherHandler.Matcher.MatchType)
+                || propertyInfo.GetCustomAttribute<ParameterAttribute>() is null)
             {
-                throw new Exception($"No property '{segmentMatcherHandler.SegmentPropertyName}' with a parameter attribute in page '{pageType.FullName}' of type '{segmentMatcherHandler.Matcher.MatchType.FullName}' has been found.");
+                throw new Exception($"No property '{segmentMatcherHandler.SegmentPropertyName}' with a parameter attribute in page '{pageType.FullName}' of type '{segmentMatcherHandler.Matcher.MatchType?.FullName}' has been found.");
             }
         }
     }
