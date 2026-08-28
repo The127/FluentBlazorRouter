@@ -80,6 +80,7 @@ Three checks now make that failure impossible to ship:
 
 ```
 just build     # build the solution in Release
+just test      # run the unit tests
 just check     # everything CI checks, run locally
 just pack 1.2.3  # build a package without releasing it
 just verify 1.2.3  # pack, then assert package and assembly versions match
