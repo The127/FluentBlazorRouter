@@ -13,7 +13,7 @@ public interface IRouteProvider
     bool TryGetPageRoute(Type pageType, [NotNullWhen(true)] out string? route);
 
     bool TryMatch(string relativeUri, out Dictionary<string, object?> routeValues,
-        [NotNullWhen(true)] out Type? pageType);
+        [NotNullWhen(true)] out Route? route);
 
     bool TryGetRouteData<TPage>([NotNullWhen(true)] out Route? route) => TryGetRouteData(typeof(TPage), out route);
     bool TryGetRouteData(Type pageType, [NotNullWhen(true)] out Route? route);

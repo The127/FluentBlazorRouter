@@ -61,12 +61,12 @@ public sealed class FluentRouter : IComponent, IHandleAfterRender, IDisposable
 
         relativeUri = StripQueryAndFragment(relativeUri);
 
-        if (RouteProvider.TryMatch(relativeUri, out var routeValues,out var pageType))
+        if (RouteProvider.TryMatch(relativeUri, out var routeValues, out Route? matchedRoute))
         {
             var middlewares = (IEnumerable<IRouterMiddleware>)(ServiceProvider.GetService(typeof(IEnumerable<IRouterMiddleware>)) ?? Enumerable.Empty<IRouterMiddleware>());
 
             var routeData = new RouteData(
-                pageType,
+                matchedRoute.PageType,
                 routeValues!
             );
             

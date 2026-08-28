@@ -21,19 +21,19 @@ public sealed class RouteProvider : IRouteProvider
         }
     }
 
-    public bool TryMatch(string relativeUri, out Dictionary<string, object?> routeValues, [NotNullWhen(true)] out Type? pageType)
+    public bool TryMatch(string relativeUri, out Dictionary<string, object?> routeValues, [NotNullWhen(true)] out Route? route)
     {
-        pageType = null;
         routeValues = new Dictionary<string, object?>();
-        
-        foreach (var route in _routes)
+
+        foreach (var candidate in _routes)
         {
-            if (!route.Matches(relativeUri, routeValues)) continue;
-            
-            pageType = route.PageType;
+            if (!candidate.Matches(relativeUri, routeValues)) continue;
+
+            route = candidate;
             return true;
         }
-        
+
+        route = null;
         return false;
     }
 

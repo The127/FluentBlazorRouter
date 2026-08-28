@@ -32,8 +32,7 @@
 
     private void DetermineBreadCrumbs(string relativeLocation)
     {
-        if (!RouteProvider.TryMatch(relativeLocation, out var routeValues, out var pageType)) return;
-        if (!RouteProvider.TryGetRouteData(pageType, out var routeData)) return;
+        if (!RouteProvider.TryMatch(relativeLocation, out var routeValues, out Route? routeData)) return;
 
         var breadcrumbs = new List<(string, string)>();
 
