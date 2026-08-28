@@ -51,6 +51,58 @@ internal sealed class StaticParameterPage
     [Parameter] public static int Id { get; set; }
 }
 
+internal class PlainBasePage
+{
+    public int Id { get; set; }
+}
+
+internal sealed class ShadowedWrongTypePage : PlainBasePage
+{
+    [Parameter] public new string Id { get; set; } = string.Empty;
+}
+
+internal sealed class ShadowedCompatibleTypePage : PlainBasePage
+{
+    [Parameter] public new int? Id { get; set; }
+}
+
+internal class VirtualNoAttributeBasePage
+{
+    public virtual int Id { get; set; }
+}
+
+internal sealed class OverriddenOnlyParameterPage : VirtualNoAttributeBasePage
+{
+    [Parameter] public override int Id { get; set; }
+}
+
+internal class AttributeOnBasePage
+{
+    [Parameter] public int Id { get; set; }
+}
+
+internal sealed class ShadowedWithoutAttributePage : AttributeOnBasePage
+{
+    public new string Id { get; set; } = string.Empty;
+}
+
+internal class VirtualParameterBasePage
+{
+    [Parameter] public virtual int Id { get; set; }
+}
+
+internal sealed class OverriddenParameterPage : VirtualParameterBasePage
+{
+    [Parameter] public override int Id { get; set; }
+}
+
+internal sealed class IndexerPage
+{
+    public int this[int index] => index;
+
+    public int this[string key] => key.Length;
+}
+
 internal class ProtectedBasePage
 {
     protected int Id { get; set; }

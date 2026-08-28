@@ -147,7 +147,33 @@ public class RouteMatcherValidateTests
     }
 
     [Fact]
-    public void Validate_PropertyShadowedWithDifferentType_ThrowsAmbiguousMatch()
-        => Should.Throw<AmbiguousMatchException>(
-            () => Compile("counter/{Id:int}").Validate(typeof(ShadowedParameterPage)));
+    public void Validate_PageWithOverloadedIndexers_ReportsTheMissingProperty()
+        => Should.Throw<Exception>(() => Compile("counter/{Item:int}").Validate(typeof(IndexerPage)))
+            .Message.ShouldBe("No property 'Item' found on page 'FluentBlazorRouter.UnitTests.IndexerPage'.");
+
+    [Fact]
+    public void Validate_ParameterDeclaredOnBothShadowAndBase_Throws()
+        => Should.Throw<Exception>(() => Compile("counter/{Id:int}").Validate(typeof(ShadowedParameterPage)))
+            .Message.ShouldBe("Property 'Id' is declared as a parameter on both 'FluentBlazorRouter.UnitTests.ShadowedParameterPage' and 'FluentBlazorRouter.UnitTests.BasePage'. Blazor requires parameter names to be unique.");
+
+    [Fact]
+    public void Validate_ParameterOnOverrideOnly_DoesNotThrow()
+        => Should.NotThrow(() => Compile("counter/{Id:int}").Validate(typeof(OverriddenOnlyParameterPage)));
+
+    [Fact]
+    public void Validate_ParameterOnShadowedBaseOnly_UsesTheBaseProperty()
+        => Should.NotThrow(() => Compile("counter/{Id:int}").Validate(typeof(ShadowedWithoutAttributePage)));
+
+    [Fact]
+    public void Validate_OverriddenParameterProperty_DoesNotThrow()
+        => Should.NotThrow(() => Compile("counter/{Id:int}").Validate(typeof(OverriddenParameterPage)));
+
+    [Fact]
+    public void Validate_PropertyShadowedWithCompatibleType_UsesTheMostDerivedProperty()
+        => Should.NotThrow(() => Compile("counter/{Id:int}").Validate(typeof(ShadowedCompatibleTypePage)));
+
+    [Fact]
+    public void Validate_PropertyShadowedWithIncompatibleType_ReportsTheMostDerivedProperty()
+        => Should.Throw<Exception>(() => Compile("counter/{Id:int}").Validate(typeof(ShadowedWrongTypePage)))
+            .Message.ShouldBe("Property 'Id' on page 'FluentBlazorRouter.UnitTests.ShadowedWrongTypePage' is of type 'System.String' but the route segment requires 'System.Int32'.");
 }

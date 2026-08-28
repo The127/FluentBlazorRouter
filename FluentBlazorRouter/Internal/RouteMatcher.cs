@@ -59,6 +59,34 @@ internal sealed class RouteMatcher
     private static bool AcceptsMatchType(Type propertyType, Type matchType)
         => propertyType == matchType || Nullable.GetUnderlyingType(propertyType) == matchType;
 
+    private static List<PropertyInfo> FindPublicInstanceProperties(Type pageType, string propertyName)
+    {
+        var properties = new List<PropertyInfo>();
+        var seenDeclarations = new HashSet<MethodInfo>();
+
+        for (var type = pageType; type is not null; type = type.BaseType)
+        {
+            var declared = type
+                .GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly)
+                .Where(candidate => candidate.Name == propertyName && candidate.GetIndexParameters().Length == 0);
+
+            foreach (var candidate in declared)
+            {
+                var accessor = candidate.GetMethod ?? candidate.SetMethod;
+                var declaration = accessor?.GetBaseDefinition();
+
+                if (declaration is not null && !seenDeclarations.Add(declaration))
+                {
+                    continue;
+                }
+
+                properties.Add(candidate);
+            }
+        }
+
+        return properties;
+    }
+
     private static string Describe(Type type)
     {
         var underlying = Nullable.GetUnderlyingType(type);
@@ -82,12 +110,22 @@ internal sealed class RouteMatcher
                 throw new Exception($"Segment matcher for '{propertyName}' on page '{pageType.FullName}' has no MatchType.");
             }
 
-            var propertyInfo = pageType.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy);
+            var candidates = FindPublicInstanceProperties(pageType, propertyName);
+            var parameters = candidates
+                .Where(candidate => candidate.GetCustomAttribute<ParameterAttribute>() is not null)
+                .ToList();
+
+            if (parameters.Count > 1)
+            {
+                throw new Exception($"Property '{propertyName}' is declared as a parameter on both '{parameters[0].DeclaringType?.FullName}' and '{parameters[1].DeclaringType?.FullName}'. Blazor requires parameter names to be unique.");
+            }
+
+            var propertyInfo = parameters.FirstOrDefault() ?? candidates.FirstOrDefault();
             if (propertyInfo is null)
             {
                 var declaredAnywhere = pageType
                     .GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy)
-                    .Any(property => property.Name == propertyName);
+                    .Any(property => property.Name == propertyName && property.GetIndexParameters().Length == 0);
                 throw new Exception(declaredAnywhere
                     ? $"Property '{propertyName}' on page '{pageType.FullName}' is not a public instance property."
                     : $"No property '{propertyName}' found on page '{pageType.FullName}'.");
