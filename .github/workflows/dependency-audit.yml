@@ -1,0 +1,89 @@
+name: Dependency audit
+
+# Advisories are published against code that has not changed, so this runs on a schedule
+# rather than as a pull request check. A new advisory raises an issue instead of turning
+# every open pull request red.
+#
+# GitHub disables scheduled workflows in public repositories after 60 days without commit
+# activity, which is exactly when this matters most. Run it by hand from the Actions tab if
+# the repository has been quiet.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+env:
+  ISSUE_TITLE: "Vulnerable dependencies detected"
+  ISSUE_LABEL: "dependency-audit"
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: |
+          dotnet restore FluentBlazorRouter.sln
+          dotnet restore net10example/BlazorApp1.sln
+
+      - name: Scan for vulnerable packages
+        id: scan
+        run: |
+          set -euo pipefail
+          dotnet list FluentBlazorRouter.sln package --vulnerable --include-transitive --format json > main.json
+          dotnet list net10example/BlazorApp1.sln package --vulnerable --include-transitive --format json > example.json
+
+          set +e
+          python3 .github/scripts/audit_dependencies.py main.json example.json > report.md
+          status=$?
+          set -e
+
+          cat report.md
+          cat report.md >> "$GITHUB_STEP_SUMMARY"
+
+          case "$status" in
+            0) echo "found=false" >> "$GITHUB_OUTPUT" ;;
+            8) echo "found=true" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::The dependency audit did not run to completion."; exit 1 ;;
+          esac
+
+      - name: Raise or update the tracking issue
+        if: steps.scan.outputs.found == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          body="$(cat report.md)"
+          body="${body}"$'\n\n'"Raised by the scheduled dependency audit. This body is regenerated on every run, so keep notes in comments. It closes itself once the audit comes back clean."
+
+          gh label create "$ISSUE_LABEL" --description "Raised by the scheduled dependency audit" --color "B60205" --force
+          number="$(gh issue list --state open --label "$ISSUE_LABEL" --json number --jq '.[0].number // empty')"
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --body "$body"
+          else
+            gh issue create --title "$ISSUE_TITLE" --body "$body" --label "$ISSUE_LABEL"
+          fi
+
+      - name: Close the tracking issue
+        if: steps.scan.outputs.found == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          number="$(gh issue list --state open --label "$ISSUE_LABEL" --json number --jq '.[0].number // empty')"
+          if [ -n "$number" ]; then
+            gh issue close "$number" --comment "No vulnerable packages found."
+          fi
