@@ -1,0 +1,151 @@
+name: Release
+
+# Releases are cut by pushing a version tag:
+#
+#   git tag v1.2.3 && git push origin v1.2.3
+#
+# The tag is the single source of the version. Nothing is hardcoded in the csproj,
+# and nothing is published from a developer machine.
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write   # required: OIDC token for NuGet trusted publishing
+      contents: write   # required: create the GitHub Release
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Derive version from tag
+        id: version
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          version="${tag#v}"
+
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Tag '$tag' is not of the form vMAJOR.MINOR.PATCH[-prerelease]."
+            exit 1
+          fi
+
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$version" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Releasing version $version"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Fail if this version is already published
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="${{ steps.version.outputs.version }}"
+          index="$(curl -sf https://api.nuget.org/v3-flatcontainer/fluentblazorrouter/index.json || true)"
+          if [[ -z "$index" ]]; then
+            echo "Could not read the version index; continuing."
+            exit 0
+          fi
+          if grep -qi "\"${expected}\"" <<<"$index"; then
+            echo "::error::Version ${expected} is already published on nuget.org. NuGet does not allow replacing a published version - tag a new version instead."
+            exit 1
+          fi
+          echo "OK: ${expected} is not yet published."
+
+      - name: Pack
+        run: >
+          dotnet pack FluentBlazorRouter/FluentBlazorRouter.csproj
+          --configuration Release
+          -p:Version=${{ steps.version.outputs.version }}
+          -p:ContinuousIntegrationBuild=true
+          --output ${{ github.workspace }}/artifacts
+
+      # This is the guard for issue #3: 1.2.2 shipped to nuget.org carrying assemblies
+      # still stamped 1.0.0.0, so NuGet clients kept serving cached 1.2.1 binaries and the
+      # published fix never reached anyone. A release now fails loudly rather than shipping
+      # a package whose versions disagree with its tag.
+      - name: Verify package and assembly versions match the tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="${{ steps.version.outputs.version }}"
+
+          shopt -s nullglob
+          nupkgs=(artifacts/*.nupkg)
+          if [[ ${#nupkgs[@]} -ne 1 ]]; then
+            echo "::error::Expected exactly one .nupkg in artifacts/, found ${#nupkgs[@]}."
+            exit 1
+          fi
+
+          work="$(mktemp -d)"
+          unzip -q "${nupkgs[0]}" -d "$work"
+
+          package_version="$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' "$work"/*.nuspec | head -1)"
+          if [[ "$package_version" != "$expected" ]]; then
+            echo "::error::Package version '$package_version' does not match tag version '$expected'. A <PackageVersion> property overrides -p:Version - that is what caused issue #3."
+            exit 1
+          fi
+
+          # The assembly version is what NuGet clients, the runtime and decompilers see.
+          # If it does not move, consumers keep resolving their cached copy of the old release.
+          expected_assembly="${expected%%-*}.0"
+          dll="$(find "$work/lib" -name 'FluentBlazorRouter.dll' | head -1)"
+          if [[ -z "$dll" ]]; then
+            echo "::error::No FluentBlazorRouter.dll found inside the package."
+            exit 1
+          fi
+          if ! strings -el "$dll" | grep -qx "$expected_assembly"; then
+            echo "::error::Assembly version in the package is not '$expected_assembly' as expected for tag '$expected'. Publishing a new package version with an unchanged assembly version is exactly the issue #3 failure."
+            exit 1
+          fi
+
+          echo "OK: package $package_version, assembly $expected_assembly"
+
+      - name: Upload package as build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: artifacts/*.nupkg
+          if-no-files-found: error
+
+      - name: NuGet login (OIDC to short-lived API key)
+        id: login
+        uses: NuGet/login@v1
+        with:
+          user: ${{ secrets.NUGET_USER }}
+
+      - name: Push to nuget.org
+        run: >
+          dotnet nuget push "artifacts/*.nupkg"
+          --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
+          --source https://api.nuget.org/v3/index.json
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          args=(--title "${GITHUB_REF_NAME}" --generate-notes)
+          if [[ "$PRERELEASE" == "true" ]]; then
+            args+=(--prerelease)
+          fi
+          gh release create "${GITHUB_REF_NAME}" "${args[@]}" artifacts/*.nupkg

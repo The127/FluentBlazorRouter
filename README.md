@@ -180,6 +180,11 @@ And this in your *Program.cs*:
 builder.Services.AddTransient<IRouterMiddleware, MyMiddleware>();
 ```
 
+## Releasing
+
+Releases are cut from a git tag and published to NuGet by GitHub Actions
+(`just release 1.2.3`). See [RELEASING.md](RELEASING.md).
+
 ## License
 
 [MIT](https://choosealicense.com/licenses/mit/)
