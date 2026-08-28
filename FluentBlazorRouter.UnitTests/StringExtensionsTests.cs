@@ -3,6 +3,8 @@ using Xunit;
 
 namespace FluentBlazorRouter.UnitTests;
 
+#pragma warning disable CS0618
+
 public class StringExtensionsTests
 {
     [Fact]
@@ -104,3 +106,5 @@ public class StringExtensionsTests
         public override string? ToString() => null;
     }
 }
+
+#pragma warning restore CS0618

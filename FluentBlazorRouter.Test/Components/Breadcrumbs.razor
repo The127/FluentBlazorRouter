@@ -41,7 +41,7 @@
         {
             if (routeData.TryGetMetadata<string>(out var breadcrumbText))
             {
-                var breadcrumbUrl = routeData.FullRoute.ApplyRouteValues(routeValues);
+                var breadcrumbUrl = routeData.BuildUrl(routeValues);
                 breadcrumbs.Add((breadcrumbText, breadcrumbUrl));
             }
             routeData = routeData.Parent;

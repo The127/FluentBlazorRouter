@@ -1,7 +1,11 @@
-﻿namespace FluentBlazorRouter;
+using FluentBlazorRouter.Internal;
+
+namespace FluentBlazorRouter;
 
 public interface ISegmentMatcher
 {
     bool MatchSegment(string segment, out object? segmentValue);
     Type MatchType { get; }
+
+    string FormatValue(object? value) => SegmentValueFormatter.Format(value, MatchType);
 }
