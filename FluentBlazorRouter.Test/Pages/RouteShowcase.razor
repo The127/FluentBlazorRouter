@@ -1,0 +1,43 @@
+@using FluentBlazorRouter
+
+<PageTitle>Route showcase</PageTitle>
+
+<h1>Showcase: @Label</h1>
+
+<dl>
+    <dt>Optional id</dt>
+    <dd>@(OptionalId?.ToString() ?? "(null)")</dd>
+
+    <dt>Page2</dt>
+    <dd>@Page2</dd>
+
+    <dt>Free_Text</dt>
+    <dd>@Free_Text</dd>
+
+    <dt>Rebuilt url</dt>
+    <dd>@RebuiltUrl</dd>
+</dl>
+
+@code {
+    [Parameter] public int? OptionalId { get; set; }
+    [Parameter] public int Page2 { get; set; }
+    [Parameter] public string Free_Text { get; set; } = string.Empty;
+
+    [Inject] public IRouteProvider RouteProvider { get; set; } = null!;
+
+    private string Label => $"{OptionalId?.ToString() ?? "none"} / {Page2} / {Free_Text}";
+
+    private string RebuiltUrl { get; set; } = string.Empty;
+
+    protected override void OnParametersSet()
+    {
+        RebuiltUrl = RouteProvider.TryGetRouteData<RouteShowcase>(out var route)
+            ? route.BuildUrl(new Dictionary<string, object?>
+            {
+                ["OptionalId"] = OptionalId,
+                ["Page2"] = Page2,
+                ["Free_Text"] = Free_Text,
+            })
+            : "(no route)";
+    }
+}

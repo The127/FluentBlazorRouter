@@ -26,10 +26,14 @@ builder.Services.AddFluentRouting<FluentBlazorRouter.Test.Pages.Index>(
                     .WithPage<FetchData>("fetchdata", groupBuilder => { groupBuilder.WithMetadata("Fetch Data"); });
             })
             .WithPage<StringParameter>("stringParamWithType/{ActiveTab:string}")
-            .WithPage<StringParameter>("stringParamWithoutType/{ActiveTab}");
+            .WithPage<StringParameter>("stringParamWithoutType/{ActiveTab}")
+            .WithPage<RouteShowcase>("showcase/{OptionalId:optint}/{Page2:int}/{Free_Text}", showcase => {
+                showcase.WithMetadata("Showcase");
+            });
 
 
-    });
+    },
+    options => options.AddSegmentMatcher("optint", new OptionalIntSegmentMatcher()));
 
 builder.Services.AddTransient<IRouterMiddleware, TestMiddleware>();
 
