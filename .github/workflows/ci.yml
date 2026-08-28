@@ -49,6 +49,9 @@ jobs:
       - name: Test
         run: dotnet test FluentBlazorRouter.sln --configuration Release --no-build
 
+      - name: Build the example against its published package
+        run: dotnet build net10example/BlazorApp1.sln --configuration Release
+
       - name: Pack
         run: >
           dotnet pack FluentBlazorRouter/FluentBlazorRouter.csproj

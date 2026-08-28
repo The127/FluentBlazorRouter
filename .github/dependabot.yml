@@ -1,0 +1,42 @@
+version: 2
+
+updates:
+  - package-ecosystem: "nuget"
+    directories:
+      - "/FluentBlazorRouter"
+      - "/FluentBlazorRouter.UnitTests"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 5
+    groups:
+      test-dependencies:
+        patterns:
+          - "xunit*"
+          - "Shouldly"
+          - "Microsoft.NET.Test.Sdk"
+          - "coverlet*"
+    # Components.Web 8.0 and later target net8.0, which cannot be referenced from this
+    # net6.0 library, so only 6.0.x patches are useful here. This also suppresses security
+    # PRs for it, and .NET 6 servicing has ended, so revisit when the target framework moves.
+    ignore:
+      - dependency-name: "Microsoft.AspNetCore.Components.Web"
+        update-types:
+          - "version-update:semver-major"
+          - "version-update:semver-minor"
+
+  # The example consumes the published package rather than the project, so its only
+  # dependency is FluentBlazorRouter itself. Bumping it keeps the README example current.
+  - package-ecosystem: "nuget"
+    directory: "/net10example/BlazorApp1"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 2
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    groups:
+      actions:
+        patterns:
+          - "*"
