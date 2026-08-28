@@ -85,11 +85,68 @@ public class RouteBuildUrlTests
                 () => CreateRoute("counter/{Id:int}").BuildUrl(new Dictionary<string, object?> { ["Id"] = "abc" }))
             .Message.ShouldContain("does not match the expected type");
 
+    [Theory]
+    [InlineData("a/b", "user/a%2Fb")]
+    [InlineData("a b", "user/a%20b")]
+    [InlineData("a?b", "user/a%3Fb")]
+    [InlineData("a#b", "user/a%23b")]
+    [InlineData("a%b", "user/a%25b")]
+    public void BuildUrl_EscapesReservedCharacters(string value, string expected)
+        => CreateRoute("user/{Name}")
+            .BuildUrl(new Dictionary<string, object?> { ["Name"] = value })
+            .ShouldBe(expected);
+
+    [Theory]
+    [InlineData("a/b")]
+    [InlineData("a b")]
+    [InlineData("a?b")]
+    [InlineData("a#b")]
+    [InlineData("a%b")]
+    public void BuildUrl_RoundTripsReservedCharacters(string value)
+    {
+        var route = CreateRoute("user/{Name}");
+        var url = route.BuildUrl(new Dictionary<string, object?> { ["Name"] = value });
+
+        var routeValues = new Dictionary<string, object?>();
+        route.Matches(url, routeValues).ShouldBeTrue();
+        routeValues["Name"].ShouldBe(value);
+    }
+
     [Fact]
-    public void BuildUrl_ValueContainingPathSeparator_Throws()
-        => Should.Throw<InvalidOperationException>(
-                () => CreateRoute("user/{Name}").BuildUrl(new Dictionary<string, object?> { ["Name"] = "a/b" }))
-            .Message.ShouldContain("contains a path separator");
+    public void BuildUrl_EscapesStaticSegments()
+        => CreateRoute("my group/{Name}")
+            .BuildUrl(new Dictionary<string, object?> { ["Name"] = "x" })
+            .ShouldBe("my%20group/x");
+
+    [Theory]
+    [InlineData("my group/{Name}")]
+    [InlineData("my%20group/{Name}")]
+    public void Matches_StaticSegmentAcceptsEitherTemplateSpelling(string template)
+        => CreateRoute(template)
+            .Matches("my%20group/x", new Dictionary<string, object?>())
+            .ShouldBeTrue();
+
+    [Theory]
+    [InlineData("user/%206f9619ff-8b86-d011-b42d-00cf4fc964ff")]
+    [InlineData("user/6f9619ff-8b86-d011-b42d-00cf4fc964ff%20")]
+    public void Matches_EscapedWhitespaceAroundAGuid_DoesNotMatch(string url)
+        => CreateRoute("user/{Id:guid}")
+            .Matches(url, new Dictionary<string, object?>())
+            .ShouldBeFalse();
+
+    [Theory]
+    [InlineData("counter/%205")]
+    [InlineData("counter/5%20")]
+    public void Matches_EscapedWhitespaceAroundANumber_DoesNotMatch(string url)
+        => CreateRoute("counter/{Id:int}")
+            .Matches(url, new Dictionary<string, object?>())
+            .ShouldBeFalse();
+
+    [Fact]
+    public void Matches_UnescapesStaticSegments()
+        => CreateRoute("my group/{Name}")
+            .Matches("my%20group/x", new Dictionary<string, object?>())
+            .ShouldBeTrue();
 
     [Fact]
     public void BuildUrl_NullableValue_UsesUnderlyingType()

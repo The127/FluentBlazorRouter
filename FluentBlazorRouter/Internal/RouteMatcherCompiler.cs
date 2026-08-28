@@ -46,7 +46,7 @@ internal sealed class RouteMatcherCompiler
             else
             {
                 // special case => no matcher, the strings have to match
-                segmentMatchers.Add(new SegmentMatcherHandler(null, segment));
+                segmentMatchers.Add(new SegmentMatcherHandler(null, Uri.UnescapeDataString(segment)));
             }
         }
 

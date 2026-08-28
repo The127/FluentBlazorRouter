@@ -43,15 +43,23 @@ public sealed class FluentRouter : IComponent, IHandleAfterRender, IDisposable
         Refresh();
     }
 
+    internal static string StripQueryAndFragment(string relativeUri)
+    {
+        var hashIndex = relativeUri.IndexOf('#');
+        if (hashIndex > -1)
+        {
+            relativeUri = relativeUri[..hashIndex];
+        }
+
+        var questionMarkIndex = relativeUri.IndexOf('?');
+        return questionMarkIndex > -1 ? relativeUri[..questionMarkIndex] : relativeUri;
+    }
+
     private void Refresh()
     {
         var relativeUri = NavigationManager.ToBaseRelativePath(_location);
 
-        var questionMarkIndex = relativeUri.IndexOf('?');
-        if (questionMarkIndex > -1)
-        {
-            relativeUri = relativeUri[..questionMarkIndex];
-        }
+        relativeUri = StripQueryAndFragment(relativeUri);
 
         if (RouteProvider.TryMatch(relativeUri, out var routeValues,out var pageType))
         {

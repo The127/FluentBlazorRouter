@@ -15,7 +15,7 @@ internal class ByteSegmentMatcher : SegmentMatcherBase<byte>
 {
     public override bool MatchSegment(string segment, out object? segmentValue)
     {
-        if (byte.TryParse(segment, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+        if (byte.TryParse(segment, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var value))
         {
             segmentValue = value;
             return true;
@@ -30,7 +30,7 @@ internal class ShortSegmentMatcher : SegmentMatcherBase<short>
 {
     public override bool MatchSegment(string segment, out object? segmentValue)
     {
-        if (short.TryParse(segment, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+        if (short.TryParse(segment, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var value))
         {
             segmentValue = value;
             return true;
@@ -45,7 +45,7 @@ internal class IntSegmentMatcher : SegmentMatcherBase<int>
 {
     public override bool MatchSegment(string segment, out object? segmentValue)
     {
-        if (int.TryParse(segment, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+        if (int.TryParse(segment, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var value))
         {
             segmentValue = value;
             return true;
@@ -60,7 +60,7 @@ internal class LongSegmentMatcher : SegmentMatcherBase<long>
 {
     public override bool MatchSegment(string segment, out object? segmentValue)
     {
-        if (long.TryParse(segment, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+        if (long.TryParse(segment, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out var value))
         {
             segmentValue = value;
             return true;
@@ -75,7 +75,7 @@ internal class FloatSegmentMatcher : SegmentMatcherBase<float>
 {
     public override bool MatchSegment(string segment, out object? segmentValue)
     {
-        if (float.TryParse(segment, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
+        if (float.TryParse(segment, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var value))
         {
             segmentValue = value;
             return true;
@@ -90,7 +90,7 @@ internal class DoubleSegmentMatcher : SegmentMatcherBase<double>
 {
     public override bool MatchSegment(string segment, out object? segmentValue)
     {
-        if (double.TryParse(segment, NumberStyles.Float, CultureInfo.InvariantCulture, out var value))
+        if (double.TryParse(segment, NumberStyles.AllowLeadingSign | NumberStyles.AllowDecimalPoint | NumberStyles.AllowExponent, CultureInfo.InvariantCulture, out var value))
         {
             segmentValue = value;
             return true;
@@ -105,7 +105,7 @@ internal class GuidSegmentMatcher : SegmentMatcherBase<Guid>
 {
     public override bool MatchSegment(string segment, out object? segmentValue)
     {
-        if (Guid.TryParse(segment, out var value))
+        if (segment.Trim() == segment && Guid.TryParse(segment, out var value))
         {
             segmentValue = value;
             return true;

@@ -22,11 +22,6 @@ internal static class SegmentValueFormatter
                             : value.ToString())
                         ?? throw new InvalidOperationException($"Route value of type '{value.GetType().FullName}' has a null string representation. Override FormatValue to support it.");
 
-        if (formatted.Contains('/'))
-        {
-            throw new InvalidOperationException($"Route value '{formatted}' contains a path separator and cannot be used as a single segment.");
-        }
-
         return formatted;
     }
 }

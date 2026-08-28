@@ -24,7 +24,7 @@ internal sealed class RouteMatcher
 
         for (var i = 0; i < segments.Length; i++)
         {
-            var segment = segments[i];
+            var segment = Uri.UnescapeDataString(segments[i]);
             
             var segmentMatcherHandler = _segmentMatchers[i];
             var segmentMatcher = segmentMatcherHandler.Matcher;
@@ -109,7 +109,7 @@ internal sealed class RouteMatcher
         {
             if (segmentMatcherHandler.Matcher is null)
             {
-                segments.Add(segmentMatcherHandler.SegmentPropertyName);
+                segments.Add(Uri.EscapeDataString(segmentMatcherHandler.SegmentPropertyName));
                 continue;
             }
 
@@ -118,7 +118,7 @@ internal sealed class RouteMatcher
                 throw new InvalidOperationException($"No route value provided for '{segmentMatcherHandler.SegmentPropertyName}'.");
             }
 
-            segments.Add(segmentMatcherHandler.Matcher.FormatValue(value));
+            segments.Add(Uri.EscapeDataString(segmentMatcherHandler.Matcher.FormatValue(value)));
         }
 
         return string.Join("/", segments);
