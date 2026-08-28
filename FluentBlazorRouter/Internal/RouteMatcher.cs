@@ -12,9 +12,9 @@ internal sealed class RouteMatcher
         _segmentMatchers = segmentMatchers;
     }
 
-    internal bool Matches(string relativeUri, Dictionary<string, object> routeValues)
+    internal bool Matches(string relativeUri, Dictionary<string, object?> routeValues)
     {
-        Dictionary<string, object> tempRouteValues = new();
+        Dictionary<string, object?> tempRouteValues = new();
         var segments = relativeUri.Split("/");
 
         if (segments.Length != _segmentMatchers.Count)
@@ -44,6 +44,11 @@ internal sealed class RouteMatcher
                     return false;
                 }
 
+                if (segmentValue is null && IsNonNullableValueType(segmentMatcher.MatchType))
+                {
+                    throw new InvalidOperationException($"Segment matcher for '{segmentMatcherHandler.SegmentPropertyName}' returned null but its MatchType '{Describe(segmentMatcher.MatchType)}' cannot hold null.");
+                }
+
                 tempRouteValues[segmentMatcherHandler.SegmentPropertyName] = segmentValue;
             }
         }
@@ -55,6 +60,9 @@ internal sealed class RouteMatcher
         
         return true;
     }
+
+    private static bool IsNonNullableValueType(Type? type)
+        => type is { IsValueType: true } && Nullable.GetUnderlyingType(type) is null;
 
     private static bool AcceptsMatchType(Type propertyType, Type matchType)
         => propertyType == matchType || Nullable.GetUnderlyingType(propertyType) == matchType;

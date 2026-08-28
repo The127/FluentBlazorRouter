@@ -21,10 +21,10 @@ public sealed class RouteProvider : IRouteProvider
         }
     }
 
-    public bool TryMatch(string relativeUri, out Dictionary<string, object> routeValues, [NotNullWhen(true)] out Type? pageType)
+    public bool TryMatch(string relativeUri, out Dictionary<string, object?> routeValues, [NotNullWhen(true)] out Type? pageType)
     {
         pageType = null;
-        routeValues = new Dictionary<string, object>();
+        routeValues = new Dictionary<string, object?>();
         
         foreach (var route in _routes)
         {
@@ -37,7 +37,7 @@ public sealed class RouteProvider : IRouteProvider
         return false;
     }
 
-    public bool TryGetRouteData(Type pageType, out Route? route)
+    public bool TryGetRouteData(Type pageType, [NotNullWhen(true)] out Route? route)
     {
         route = _routes.FirstOrDefault(x => x.PageType == pageType);
         return route is not null;

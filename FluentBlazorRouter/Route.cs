@@ -22,7 +22,7 @@ public sealed record Route
         _routeMatcher = compiler.Compile(fullRoute);
     }
 
-    public bool Matches(string relativeUri, Dictionary<string, object> routeValues) =>
+    public bool Matches(string relativeUri, Dictionary<string, object?> routeValues) =>
         _routeMatcher.Matches(relativeUri, routeValues);
 
     public void Validate()

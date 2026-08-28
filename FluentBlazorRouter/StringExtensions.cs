@@ -5,7 +5,7 @@ namespace FluentBlazorRouter;
 
 public static class StringExtensions
 {
-    public static string ApplyRouteValues(this string route, Dictionary<string, object> routeValues)
+    public static string ApplyRouteValues(this string route, Dictionary<string, object?> routeValues)
     {
         if (routeValues is null)
         {
@@ -34,7 +34,7 @@ public static class StringExtensions
         return result;
     }
     
-    public static string ApplyRouteValues(this string route, params object[] routeValues)
+    public static string ApplyRouteValues(this string route, params object?[] routeValues)
     {
         if (routeValues is null)
         {

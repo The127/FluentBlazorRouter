@@ -2,7 +2,7 @@
 
 internal class StringSegmentMatcher : SegmentMatcherBase<string>
 {
-    public override bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object? segmentValue)
     {
         segmentValue = segment;
         return true;
@@ -11,7 +11,7 @@ internal class StringSegmentMatcher : SegmentMatcherBase<string>
 
 internal class ByteSegmentMatcher : SegmentMatcherBase<byte>
 {
-    public override bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object? segmentValue)
     {
         if (byte.TryParse(segment, out var value))
         {
@@ -26,7 +26,7 @@ internal class ByteSegmentMatcher : SegmentMatcherBase<byte>
 
 internal class ShortSegmentMatcher : SegmentMatcherBase<short>
 {
-    public override bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object? segmentValue)
     {
         if (short.TryParse(segment, out var value))
         {
@@ -41,7 +41,7 @@ internal class ShortSegmentMatcher : SegmentMatcherBase<short>
 
 internal class IntSegmentMatcher : SegmentMatcherBase<int>
 {
-    public override bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object? segmentValue)
     {
         if (int.TryParse(segment, out var value))
         {
@@ -56,7 +56,7 @@ internal class IntSegmentMatcher : SegmentMatcherBase<int>
 
 internal class LongSegmentMatcher : SegmentMatcherBase<long>
 {
-    public override bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object? segmentValue)
     {
         if (long.TryParse(segment, out var value))
         {
@@ -71,7 +71,7 @@ internal class LongSegmentMatcher : SegmentMatcherBase<long>
 
 internal class FloatSegmentMatcher : SegmentMatcherBase<float>
 {
-    public override bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object? segmentValue)
     {
         if (float.TryParse(segment, out var value))
         {
@@ -86,7 +86,7 @@ internal class FloatSegmentMatcher : SegmentMatcherBase<float>
 
 internal class DoubleSegmentMatcher : SegmentMatcherBase<double>
 {
-    public override bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object? segmentValue)
     {
         if (double.TryParse(segment, out var value))
         {
@@ -101,7 +101,7 @@ internal class DoubleSegmentMatcher : SegmentMatcherBase<double>
 
 internal class GuidSegmentMatcher : SegmentMatcherBase<Guid>
 {
-    public override bool MatchSegment(string segment, out object segmentValue)
+    public override bool MatchSegment(string segment, out object? segmentValue)
     {
         if (Guid.TryParse(segment, out var value))
         {

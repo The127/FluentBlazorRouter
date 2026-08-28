@@ -38,7 +38,7 @@ public class RouteTests
     [Fact]
     public void Matches_DelegatesToTheCompiledMatcher()
     {
-        var routeValues = new Dictionary<string, object>();
+        var routeValues = new Dictionary<string, object?>();
 
         CreateRoute().Matches("counter/42", routeValues).ShouldBeTrue();
 
