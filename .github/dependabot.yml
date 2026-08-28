@@ -10,6 +10,9 @@ updates:
     open-pull-requests-limit: 5
     groups:
       test-dependencies:
+        update-types:
+          - "patch"
+          - "minor"
         patterns:
           - "xunit*"
           - "Shouldly"
