@@ -59,7 +59,7 @@ public sealed class FluentRouter : IComponent, IHandleAfterRender, IDisposable
 
             var routeData = new RouteData(
                 pageType,
-                routeValues
+                routeValues!
             );
             
             var renderPage = true;

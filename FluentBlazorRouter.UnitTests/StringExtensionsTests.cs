@@ -7,17 +7,17 @@ public class StringExtensionsTests
 {
     [Fact]
     public void ApplyRouteValues_Dictionary_SubstitutesUntypedPlaceholder()
-        => "user/{id}".ApplyRouteValues(new Dictionary<string, object> { ["id"] = 1 })
+        => "user/{id}".ApplyRouteValues(new Dictionary<string, object?> { ["id"] = 1 })
             .ShouldBe("user/1");
 
     [Fact]
     public void ApplyRouteValues_Dictionary_SubstitutesTypedPlaceholder()
-        => "user/{id:int}".ApplyRouteValues(new Dictionary<string, object> { ["id"] = 1 })
+        => "user/{id:int}".ApplyRouteValues(new Dictionary<string, object?> { ["id"] = 1 })
             .ShouldBe("user/1");
 
     [Fact]
     public void ApplyRouteValues_Dictionary_SubstitutesEveryPlaceholder()
-        => "{area}/user/{id:int}".ApplyRouteValues(new Dictionary<string, object>
+        => "{area}/user/{id:int}".ApplyRouteValues(new Dictionary<string, object?>
             {
                 ["area"] = "admin",
                 ["id"] = 7,
@@ -26,17 +26,17 @@ public class StringExtensionsTests
 
     [Fact]
     public void ApplyRouteValues_Dictionary_LeavesUnknownPlaceholderInPlace()
-        => "user/{id:int}".ApplyRouteValues(new Dictionary<string, object>())
+        => "user/{id:int}".ApplyRouteValues(new Dictionary<string, object?>())
             .ShouldBe("user/{id:int}");
 
     [Fact]
     public void ApplyRouteValues_Dictionary_IgnoresWhitespaceInsidePlaceholder()
-        => "user/{ id : int }".ApplyRouteValues(new Dictionary<string, object> { ["id"] = 1 })
+        => "user/{ id : int }".ApplyRouteValues(new Dictionary<string, object?> { ["id"] = 1 })
             .ShouldBe("user/1");
 
     [Fact]
     public void ApplyRouteValues_Dictionary_LeavesRouteWithoutPlaceholdersAlone()
-        => "group/example".ApplyRouteValues(new Dictionary<string, object>())
+        => "group/example".ApplyRouteValues(new Dictionary<string, object?>())
             .ShouldBe("group/example");
 
     [Theory]
@@ -45,29 +45,29 @@ public class StringExtensionsTests
     [InlineData("page/{_leading}", "_leading")]
     [InlineData("page/{Größe:int}", "Größe")]
     public void ApplyRouteValues_Dictionary_SubstitutesNamesWithDigitsOrUnderscores(string route, string key)
-        => route.ApplyRouteValues(new Dictionary<string, object> { [key] = 7 }).ShouldBe("page/7");
+        => route.ApplyRouteValues(new Dictionary<string, object?> { [key] = 7 }).ShouldBe("page/7");
 
     [Fact]
     public void ApplyRouteValues_Dictionary_IgnoresNamesTheCompilerWouldReject()
-        => "user/{1id}".ApplyRouteValues(new Dictionary<string, object> { ["1id"] = 3 })
+        => "user/{1id}".ApplyRouteValues(new Dictionary<string, object?> { ["1id"] = 3 })
             .ShouldBe("user/{1id}");
 
     [Fact]
     public void ApplyRouteValues_Dictionary_NullValue_ThrowsNamingTheKey()
         => Should.Throw<InvalidOperationException>(
-                () => "user/{id:int}".ApplyRouteValues(new Dictionary<string, object> { ["id"] = null! }))
+                () => "user/{id:int}".ApplyRouteValues(new Dictionary<string, object?> { ["id"] = null! }))
             .Message.ShouldBe("Route value 'id' is null.");
 
     [Fact]
     public void ApplyRouteValues_Dictionary_ValueWithNullToString_ThrowsNamingTheKey()
         => Should.Throw<InvalidOperationException>(
-                () => "user/{id}".ApplyRouteValues(new Dictionary<string, object> { ["id"] = new NullToString() }))
+                () => "user/{id}".ApplyRouteValues(new Dictionary<string, object?> { ["id"] = new NullToString() }))
             .Message.ShouldBe("Route value 'id' has a null string representation.");
 
     [Fact]
     public void ApplyRouteValues_Dictionary_NullDictionary_ThrowsArgumentNullException()
     {
-        Dictionary<string, object> routeValues = null!;
+        Dictionary<string, object?> routeValues = null!;
 
         Should.Throw<ArgumentNullException>(() => "user/{id}".ApplyRouteValues(routeValues))
             .ParamName.ShouldBe("routeValues");
@@ -84,7 +84,7 @@ public class StringExtensionsTests
 
     [Fact]
     public void ApplyRouteValues_Positional_NullValue_ThrowsNamingTheIndex()
-        => Should.Throw<InvalidOperationException>(() => "user/{0}".ApplyRouteValues(new object[] { null! }))
+        => Should.Throw<InvalidOperationException>(() => "user/{0}".ApplyRouteValues(new object?[] { null }))
             .Message.ShouldBe("Route value at index 0 is null.");
 
     [Fact]

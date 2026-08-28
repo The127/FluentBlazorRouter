@@ -124,7 +124,7 @@ public class RouteMatcherValidateTests
     {
         public Type MatchType => null!;
 
-        public bool MatchSegment(string segment, out object segmentValue)
+        public bool MatchSegment(string segment, out object? segmentValue)
         {
             segmentValue = 0;
             return true;
@@ -133,7 +133,7 @@ public class RouteMatcherValidateTests
 
     private sealed class NullableIntSegmentMatcher : SegmentMatcherBase<int?>
     {
-        public override bool MatchSegment(string segment, out object segmentValue)
+        public override bool MatchSegment(string segment, out object? segmentValue)
         {
             segmentValue = 0;
             if (!int.TryParse(segment, out var value))

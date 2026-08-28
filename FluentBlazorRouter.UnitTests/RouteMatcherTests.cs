@@ -14,15 +14,15 @@ public class RouteMatcherTests
     {
         var matcher = Compile("counter/{Id:int}");
 
-        matcher.Matches("counter", new Dictionary<string, object>()).ShouldBeFalse();
-        matcher.Matches("counter/42/extra", new Dictionary<string, object>()).ShouldBeFalse();
+        matcher.Matches("counter", new Dictionary<string, object?>()).ShouldBeFalse();
+        matcher.Matches("counter/42/extra", new Dictionary<string, object?>()).ShouldBeFalse();
     }
 
     [Fact]
     public void Matches_StaticSegmentDiffers_ReturnsFalse()
     {
         Compile("counter/{Id:int}")
-            .Matches("other/42", new Dictionary<string, object>())
+            .Matches("other/42", new Dictionary<string, object?>())
             .ShouldBeFalse();
     }
 
@@ -30,7 +30,7 @@ public class RouteMatcherTests
     public void Matches_SegmentFailsToParse_ReturnsFalse()
     {
         Compile("counter/{Id:int}")
-            .Matches("counter/notanumber", new Dictionary<string, object>())
+            .Matches("counter/notanumber", new Dictionary<string, object?>())
             .ShouldBeFalse();
     }
 
@@ -38,7 +38,7 @@ public class RouteMatcherTests
     public void Matches_MultipleParameters_CollectsEveryRouteValue()
     {
         var matcher = Compile("{Name}/{Id:int}/{Ratio:double}");
-        var routeValues = new Dictionary<string, object>();
+        var routeValues = new Dictionary<string, object?>();
 
         matcher.Matches("thing/7/1.5", routeValues).ShouldBeTrue();
 
@@ -51,7 +51,7 @@ public class RouteMatcherTests
     public void Matches_WhenALaterSegmentFails_LeavesRouteValuesUntouched()
     {
         var matcher = Compile("{Name}/{Id:int}");
-        var routeValues = new Dictionary<string, object>();
+        var routeValues = new Dictionary<string, object?>();
 
         matcher.Matches("thing/notanumber", routeValues).ShouldBeFalse();
 
@@ -64,7 +64,7 @@ public class RouteMatcherTests
         var builder = new FluentRouterConfigurationOptionsBuilder();
         builder.AddSegmentMatcher("optint", new OptionalIntSegmentMatcher());
         var matcher = new RouteMatcherCompiler(builder.BuildConfiguration()).Compile("counter/{Id:optint}");
-        var routeValues = new Dictionary<string, object>();
+        var routeValues = new Dictionary<string, object?>();
 
         Should.NotThrow(() => matcher.Validate(typeof(NullableIntParameterPage)));
 
@@ -78,9 +78,9 @@ public class RouteMatcherTests
 
     private sealed class OptionalIntSegmentMatcher : SegmentMatcherBase<int?>
     {
-        public override bool MatchSegment(string segment, out object segmentValue)
+        public override bool MatchSegment(string segment, out object? segmentValue)
         {
-            segmentValue = null!;
+            segmentValue = null;
             if (segment == "none")
             {
                 return true;
@@ -97,9 +97,29 @@ public class RouteMatcherTests
     }
 
     [Fact]
+    public void Matches_MatcherYieldsNullForNonNullableMatchType_Throws()
+    {
+        var builder = new FluentRouterConfigurationOptionsBuilder();
+        builder.AddSegmentMatcher("bad", new NullYieldingIntSegmentMatcher());
+        var matcher = new RouteMatcherCompiler(builder.BuildConfiguration()).Compile("counter/{Id:bad}");
+
+        Should.Throw<InvalidOperationException>(() => matcher.Matches("counter/x", new Dictionary<string, object?>()))
+            .Message.ShouldBe("Segment matcher for 'Id' returned null but its MatchType 'System.Int32' cannot hold null.");
+    }
+
+    private sealed class NullYieldingIntSegmentMatcher : SegmentMatcherBase<int>
+    {
+        public override bool MatchSegment(string segment, out object? segmentValue)
+        {
+            segmentValue = null;
+            return true;
+        }
+    }
+
+    [Fact]
     public void Matches_ExistingRouteValues_AreOverwrittenOnSuccess()
     {
-        var routeValues = new Dictionary<string, object> { ["Id"] = 1 };
+        var routeValues = new Dictionary<string, object?> { ["Id"] = 1 };
 
         Compile("counter/{Id:int}").Matches("counter/42", routeValues).ShouldBeTrue();
 
