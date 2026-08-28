@@ -42,9 +42,51 @@ public class RouteMatcherValidateTests
         => Should.NotThrow(() => Compile("counter/{Id:int}").Validate(typeof(InheritedParameterPage)));
 
     [Fact]
-    public void Validate_NullableParameterProperty_ThrowsToday_Issue5()
-        => Should.Throw<Exception>(() => Compile("counter/{Id:int}").Validate(typeof(NullableIntParameterPage)))
+    public void Validate_InheritedNullableParameterProperty_DoesNotThrow()
+        => Should.NotThrow(
+            () => Compile("counter/{Id:int}").Validate(typeof(InheritedNullableParameterPage)));
+
+    [Fact]
+    public void Validate_NullableParameterProperty_DoesNotThrow()
+        => Should.NotThrow(() => Compile("counter/{Id:int}").Validate(typeof(NullableIntParameterPage)));
+
+    [Fact]
+    public void Validate_NullableParameterProperty_StillRequiresParameterAttribute()
+        => Should.Throw<Exception>(
+                () => Compile("counter/{Id:int}").Validate(typeof(NullableIntNoAttributePage)))
             .Message.ShouldContain("No property 'Id'");
+
+    [Fact]
+    public void Validate_NullableParameterProperty_StillRequiresMatchingUnderlyingType()
+        => Should.Throw<Exception>(
+                () => Compile("counter/{Id:int}").Validate(typeof(NullableLongParameterPage)))
+            .Message.ShouldContain("No property 'Id'");
+
+    [Fact]
+    public void Validate_NullableMatchTypeWithNullableProperty_ThrowsToday_Regression()
+    {
+        var builder = new FluentRouterConfigurationOptionsBuilder();
+        builder.AddSegmentMatcher("nint", new NullableIntSegmentMatcher());
+        var matcher = new RouteMatcherCompiler(builder.BuildConfiguration()).Compile("counter/{Id:nint}");
+
+        Should.Throw<Exception>(() => matcher.Validate(typeof(NullableIntParameterPage)))
+            .Message.ShouldContain("No property 'Id'");
+    }
+
+    private sealed class NullableIntSegmentMatcher : SegmentMatcherBase<int?>
+    {
+        public override bool MatchSegment(string segment, out object segmentValue)
+        {
+            segmentValue = 0;
+            if (!int.TryParse(segment, out var value))
+            {
+                return false;
+            }
+
+            segmentValue = value;
+            return true;
+        }
+    }
 
     [Fact]
     public void Validate_PropertyShadowedWithDifferentType_ThrowsAmbiguousMatch()
