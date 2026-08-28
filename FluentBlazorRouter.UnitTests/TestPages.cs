@@ -50,6 +50,15 @@ internal sealed class InheritedParameterPage : BasePage
 {
 }
 
+internal class NullableBasePage
+{
+    [Parameter] public int? Id { get; set; }
+}
+
+internal sealed class InheritedNullableParameterPage : NullableBasePage
+{
+}
+
 internal sealed class ShadowedParameterPage : BasePage
 {
     [Parameter] public new int? Id { get; set; }

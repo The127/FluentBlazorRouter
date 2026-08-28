@@ -42,6 +42,11 @@ public class RouteMatcherValidateTests
         => Should.NotThrow(() => Compile("counter/{Id:int}").Validate(typeof(InheritedParameterPage)));
 
     [Fact]
+    public void Validate_InheritedNullableParameterProperty_DoesNotThrow()
+        => Should.NotThrow(
+            () => Compile("counter/{Id:int}").Validate(typeof(InheritedNullableParameterPage)));
+
+    [Fact]
     public void Validate_NullableParameterProperty_DoesNotThrow()
         => Should.NotThrow(() => Compile("counter/{Id:int}").Validate(typeof(NullableIntParameterPage)));
 
