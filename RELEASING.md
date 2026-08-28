@@ -41,8 +41,10 @@ issued per run, so there is no long-lived API key stored in the repository.
    Enter the workflow **file name only**, not the `.github/workflows/` path. Renaming
    `release.yml` breaks the policy, so update it there if the file ever moves.
 
-2. **Add the `NUGET_USER` repository secret** (Settings → Secrets and variables → Actions)
-   containing your nuget.org **username / profile name** — not your email address.
+That is the whole setup. There is **no API key and no repository secret** — the workflow
+mints a key valid for one hour on each run. The `user` input on the login step is the
+nuget.org account name to mint that key for (`Darkarotte`, public as the package owner),
+not a credential; if package ownership ever changes, update it in `release.yml`.
 
 A new policy on some accounts starts out *temporarily active for 7 days*. If no publish
 happens in that window it goes inactive; you can restart the window from the same page.
