@@ -42,6 +42,10 @@
     </ItemGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="FluentBlazorRouter.UnitTests" />
+    </ItemGroup>
+
+    <ItemGroup>
         <SupportedPlatform Include="browser" />
     </ItemGroup>
 

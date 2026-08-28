@@ -14,6 +14,10 @@ default:
 build:
     dotnet build {{sln}} --configuration Release
 
+# Run the unit tests.
+test:
+    dotnet test {{sln}} --configuration Release
+
 # Remove build output.
 clean:
     rm -rf {{artifacts}}
@@ -25,7 +29,7 @@ pack version="0.0.0-dev":
     dotnet pack {{lib}} --configuration Release -p:Version={{version}} --output {{artifacts}}
 
 # Everything CI checks, run locally.
-check: check-version-source build
+check: check-version-source build test
     @echo "OK"
 
 # Assert the package version still follows the version passed in at build time.
