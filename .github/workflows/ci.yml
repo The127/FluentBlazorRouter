@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      # Keeps the issue #3 fix from being undone. A <PackageVersion> property anywhere
+      # silently overrides the -p:Version the release workflow derives from the git tag,
+      # which would pin every future release to one number while the tag says something
+      # else. Probe the evaluated property so any way of pinning it is caught.
+      - name: Verify the package version follows -p:Version
+        shell: bash
+        run: |
+          set -euo pipefail
+          sentinel="9.9.9-versionguard"
+          actual="$(dotnet msbuild FluentBlazorRouter/FluentBlazorRouter.csproj \
+            -getProperty:PackageVersion -p:Version="$sentinel" -nologo | tr -d '[:space:]')"
+          if [[ "$actual" != "$sentinel" ]]; then
+            echo "::error::PackageVersion evaluated to '$actual' instead of following -p:Version. Something pins the package version; remove it. See issue #3."
+            exit 1
+          fi
+          echo "OK: package version follows -p:Version."
+
+      - name: Restore
+        run: dotnet restore FluentBlazorRouter.sln
+
+      - name: Build
+        run: dotnet build FluentBlazorRouter.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test FluentBlazorRouter.sln --configuration Release --no-build
+
+      - name: Pack
+        run: >
+          dotnet pack FluentBlazorRouter/FluentBlazorRouter.csproj
+          --configuration Release
+          --no-build
+          --output ${{ github.workspace }}/artifacts

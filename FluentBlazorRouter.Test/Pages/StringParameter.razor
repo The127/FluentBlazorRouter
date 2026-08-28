@@ -1,0 +1,22 @@
+﻿<PageTitle>String Parameter Test</PageTitle>
+
+<h1>Parameter: @ActiveTab</h1>
+
+@if (RouteProvider.TryGetPageRoute<StringParameter>(out var route)) {
+    <p>relative url: @route</p>
+} else {
+    <p>how did you get here?</p>
+}
+
+@code {
+    private int currentCount = 0;
+
+    [Parameter]
+    public string ActiveTab { get; set; }
+
+    [Inject]
+    public IRouteProvider RouteProvider { get; set; } = null!;
+
+    
+
+}

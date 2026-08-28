@@ -4,16 +4,46 @@
         <TargetFramework>net6.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-
-        <PackageId>FluentBlazorRouter</PackageId>
-        <Version>1.0.0</Version>
-        <Authors>Darkarotte</Authors>
-
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-
-        <PackageVersion>1.2.1</PackageVersion>
     </PropertyGroup>
 
+    <PropertyGroup>
+        <!--
+          Single source of truth for the version.
+
+          Do NOT add a <PackageVersion> property here: it overrides <Version> and would
+          silently pin every package to a fixed number no matter what the build passes in
+          (this is what shipped 1.2.2 with 1.0.0.0 assemblies - see issue #3).
+
+          Releases are built by .github/workflows/release.yml, which derives the version
+          from the git tag and passes -p:Version=<tag>. Setting Version alone makes
+          AssemblyVersion, FileVersion, InformationalVersion and the NuGet package version
+          all move together.
+
+          The 0.0.0-dev default only applies to local builds, so a locally built package is
+          obviously not a release.
+        -->
+        <Version>0.0.0-dev</Version>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <PackageId>FluentBlazorRouter</PackageId>
+        <Authors>Darkarotte</Authors>
+        <Description>An alternative router for Blazor applications, using dynamic groups and nesting instead of hardcoded compile time route constants.</Description>
+        <PackageTags>blazor;router;routing;aspnetcore</PackageTags>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageProjectUrl>https://github.com/The127/FluentBlazorRouter</PackageProjectUrl>
+        <RepositoryUrl>https://github.com/The127/FluentBlazorRouter</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <InternalsVisibleTo Include="FluentBlazorRouter.UnitTests" />
+    </ItemGroup>
 
     <ItemGroup>
         <SupportedPlatform Include="browser" />

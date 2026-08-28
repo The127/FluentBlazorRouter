@@ -121,6 +121,9 @@ builder.Services.AddFluentRouting<FluentBlazorRouter.Test.Pages.Index>(rootBuild
 
 Note that pages can also have sub pages.
 
+Route parameters can omit the type specifier, in which case they default to *string*.
+So `"user/{UserName}"` is equivalent to `"user/{UserName:string}"`.
+
 ### Getting the runtime route of a page
 
 To get the route of a page at runtime simply inject a *IRouteProvider* instance and use one of the *TryGetPageRoute* methods.
@@ -177,10 +180,10 @@ And this in your *Program.cs*:
 builder.Services.AddTransient<IRouterMiddleware, MyMiddleware>();
 ```
 
-## Feedback
+## Releasing
 
-If you have any feedback, please reach out to me on Discord Darkarotte#8994.
-
+Releases are cut from a git tag and published to NuGet by GitHub Actions
+(`just release 1.2.3`). See [RELEASING.md](RELEASING.md).
 
 ## License
 
