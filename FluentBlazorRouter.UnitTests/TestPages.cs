@@ -31,6 +31,16 @@ internal sealed class NullableIntParameterPage
     [Parameter] public int? Id { get; set; }
 }
 
+internal sealed class NullableIntNoAttributePage
+{
+    public int? Id { get; set; }
+}
+
+internal sealed class NullableLongParameterPage
+{
+    [Parameter] public long? Id { get; set; }
+}
+
 internal class BasePage
 {
     [Parameter] public int Id { get; set; }
