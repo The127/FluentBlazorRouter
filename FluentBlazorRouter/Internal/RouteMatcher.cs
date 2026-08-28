@@ -56,9 +56,14 @@ internal sealed class RouteMatcher
         return true;
     }
 
-    private static bool AcceptsMatchType(Type propertyType, Type? matchType)
-        => matchType is not null
-           && (propertyType == matchType || Nullable.GetUnderlyingType(propertyType) == matchType);
+    private static bool AcceptsMatchType(Type propertyType, Type matchType)
+        => propertyType == matchType || Nullable.GetUnderlyingType(propertyType) == matchType;
+
+    private static string Describe(Type type)
+    {
+        var underlying = Nullable.GetUnderlyingType(type);
+        return underlying is null ? type.FullName ?? type.Name : (underlying.FullName ?? underlying.Name) + "?";
+    }
 
     internal void Validate(Type pageType)
     {
@@ -69,12 +74,33 @@ internal sealed class RouteMatcher
                 continue;
             }
 
-            var propertyInfo = pageType.GetProperty(segmentMatcherHandler.SegmentPropertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy);
-            if (propertyInfo == null
-                || !AcceptsMatchType(propertyInfo.PropertyType, segmentMatcherHandler.Matcher.MatchType)
-                || propertyInfo.GetCustomAttribute<ParameterAttribute>() is null)
+            var propertyName = segmentMatcherHandler.SegmentPropertyName;
+            var matchType = segmentMatcherHandler.Matcher.MatchType;
+
+            if (matchType is null)
             {
-                throw new Exception($"No property '{segmentMatcherHandler.SegmentPropertyName}' with a parameter attribute in page '{pageType.FullName}' of type '{segmentMatcherHandler.Matcher.MatchType?.FullName}' has been found.");
+                throw new Exception($"Segment matcher for '{propertyName}' on page '{pageType.FullName}' has no MatchType.");
+            }
+
+            var propertyInfo = pageType.GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.FlattenHierarchy);
+            if (propertyInfo is null)
+            {
+                var declaredAnywhere = pageType
+                    .GetProperties(BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy)
+                    .Any(property => property.Name == propertyName);
+                throw new Exception(declaredAnywhere
+                    ? $"Property '{propertyName}' on page '{pageType.FullName}' is not a public instance property."
+                    : $"No property '{propertyName}' found on page '{pageType.FullName}'.");
+            }
+
+            if (!AcceptsMatchType(propertyInfo.PropertyType, matchType))
+            {
+                throw new Exception($"Property '{propertyName}' on page '{pageType.FullName}' is of type '{Describe(propertyInfo.PropertyType)}' but the route segment requires '{Describe(matchType)}'.");
+            }
+
+            if (propertyInfo.GetCustomAttribute<ParameterAttribute>() is null)
+            {
+                throw new Exception($"Property '{propertyName}' on page '{pageType.FullName}' is missing [Parameter].");
             }
         }
     }

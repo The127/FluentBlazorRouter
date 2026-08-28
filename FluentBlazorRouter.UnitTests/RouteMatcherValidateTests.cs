@@ -23,19 +23,34 @@ public class RouteMatcherValidateTests
         => Should.NotThrow(() => Compile("group/example").Validate(typeof(NoPropertyPage)));
 
     [Fact]
-    public void Validate_PropertyMissing_Throws()
+    public void Validate_PropertyMissing_SaysThePropertyIsMissing()
         => Should.Throw<Exception>(() => Compile("counter/{Id:int}").Validate(typeof(NoPropertyPage)))
-            .Message.ShouldContain("No property 'Id'");
+            .Message.ShouldBe("No property 'Id' found on page 'FluentBlazorRouter.UnitTests.NoPropertyPage'.");
 
     [Fact]
-    public void Validate_PropertyHasWrongType_Throws()
+    public void Validate_NonPublicProperty_SaysItIsNotAPublicInstanceProperty()
+        => Should.Throw<Exception>(() => Compile("counter/{Id:int}").Validate(typeof(NonPublicPropertyPage)))
+            .Message.ShouldBe("Property 'Id' on page 'FluentBlazorRouter.UnitTests.NonPublicPropertyPage' is not a public instance property.");
+
+    [Fact]
+    public void Validate_NonPublicPropertyShadowingABaseProperty_DoesNotThrowAmbiguousMatch()
+        => Should.Throw<Exception>(() => Compile("counter/{Id:int}").Validate(typeof(ShadowedNonPublicPage)))
+            .Message.ShouldBe("Property 'Id' on page 'FluentBlazorRouter.UnitTests.ShadowedNonPublicPage' is not a public instance property.");
+
+    [Fact]
+    public void Validate_StaticProperty_SaysItIsNotAPublicInstanceProperty()
+        => Should.Throw<Exception>(() => Compile("counter/{Id:int}").Validate(typeof(StaticParameterPage)))
+            .Message.ShouldBe("Property 'Id' on page 'FluentBlazorRouter.UnitTests.StaticParameterPage' is not a public instance property.");
+
+    [Fact]
+    public void Validate_PropertyHasWrongType_NamesBothTypes()
         => Should.Throw<Exception>(() => Compile("counter/{Id:int}").Validate(typeof(WrongTypePage)))
-            .Message.ShouldContain("No property 'Id'");
+            .Message.ShouldBe("Property 'Id' on page 'FluentBlazorRouter.UnitTests.WrongTypePage' is of type 'System.String' but the route segment requires 'System.Int32'.");
 
     [Fact]
-    public void Validate_PropertyLacksParameterAttribute_Throws()
+    public void Validate_PropertyLacksParameterAttribute_SaysTheAttributeIsMissing()
         => Should.Throw<Exception>(() => Compile("counter/{Id:int}").Validate(typeof(NoParameterAttributePage)))
-            .Message.ShouldContain("No property 'Id'");
+            .Message.ShouldBe("Property 'Id' on page 'FluentBlazorRouter.UnitTests.NoParameterAttributePage' is missing [Parameter].");
 
     [Fact]
     public void Validate_InheritedParameterProperty_DoesNotThrow()
@@ -54,13 +69,13 @@ public class RouteMatcherValidateTests
     public void Validate_NullableParameterProperty_StillRequiresParameterAttribute()
         => Should.Throw<Exception>(
                 () => Compile("counter/{Id:int}").Validate(typeof(NullableIntNoAttributePage)))
-            .Message.ShouldContain("No property 'Id'");
+            .Message.ShouldEndWith("is missing [Parameter].");
 
     [Fact]
     public void Validate_NullableParameterProperty_StillRequiresMatchingUnderlyingType()
         => Should.Throw<Exception>(
                 () => Compile("counter/{Id:int}").Validate(typeof(NullableLongParameterPage)))
-            .Message.ShouldContain("No property 'Id'");
+            .Message.ShouldEndWith("is of type 'System.Int64?' but the route segment requires 'System.Int32'.");
 
     [Fact]
     public void Validate_NullableMatchTypeWithNullableProperty_DoesNotThrow()
@@ -80,7 +95,7 @@ public class RouteMatcherValidateTests
         var matcher = new RouteMatcherCompiler(builder.BuildConfiguration()).Compile("counter/{Id:nint}");
 
         Should.Throw<Exception>(() => matcher.Validate(typeof(IntParameterPage)))
-            .Message.ShouldContain("No property 'Id'");
+            .Message.ShouldEndWith("is of type 'System.Int32' but the route segment requires 'System.Int32?'.");
     }
 
     [Fact]
@@ -91,7 +106,7 @@ public class RouteMatcherValidateTests
         var matcher = new RouteMatcherCompiler(builder.BuildConfiguration()).Compile("counter/{Id:nint}");
 
         Should.Throw<Exception>(() => matcher.Validate(typeof(WrongTypePage)))
-            .Message.ShouldContain("No property 'Id'");
+            .Message.ShouldEndWith("is of type 'System.String' but the route segment requires 'System.Int32?'.");
     }
 
     [Fact]
@@ -102,7 +117,7 @@ public class RouteMatcherValidateTests
         var matcher = new RouteMatcherCompiler(builder.BuildConfiguration()).Compile("counter/{Id:bad}");
 
         Should.Throw<Exception>(() => matcher.Validate(typeof(IntParameterPage)))
-            .Message.ShouldContain("No property 'Id'");
+            .Message.ShouldBe("Segment matcher for 'Id' on page 'FluentBlazorRouter.UnitTests.IntParameterPage' has no MatchType.");
     }
 
     private sealed class NullMatchTypeSegmentMatcher : ISegmentMatcher
