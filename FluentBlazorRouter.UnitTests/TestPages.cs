@@ -41,6 +41,26 @@ internal sealed class NullableLongParameterPage
     [Parameter] public long? Id { get; set; }
 }
 
+internal sealed class NonPublicPropertyPage
+{
+    internal int Id { get; set; }
+}
+
+internal sealed class StaticParameterPage
+{
+    [Parameter] public static int Id { get; set; }
+}
+
+internal class ProtectedBasePage
+{
+    protected int Id { get; set; }
+}
+
+internal sealed class ShadowedNonPublicPage : ProtectedBasePage
+{
+    private new string Id { get; set; } = string.Empty;
+}
+
 internal class BasePage
 {
     [Parameter] public int Id { get; set; }
