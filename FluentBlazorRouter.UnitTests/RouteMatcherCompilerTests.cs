@@ -1,3 +1,4 @@
+using System.Text;
 using FluentBlazorRouter.Internal;
 using Shouldly;
 using Xunit;
@@ -54,11 +55,82 @@ public class RouteMatcherCompilerTests
     [InlineData("{Id1}")]
     [InlineData("{Page2}")]
     [InlineData("{my_id}")]
-    public void Compile_ParameterNameWithDigitOrUnderscore_ThrowsToday(string segment)
-    {
-        var exception = Should.Throw<Exception>(() => CreateCompiler().Compile(segment));
+    [InlineData("{_leading}")]
+    [InlineData("{Id1:int}")]
+    public void Compile_ParameterNameWithDigitOrUnderscore_IsAccepted(string segment)
+        => Should.NotThrow(() => CreateCompiler().Compile(segment));
 
-        exception.Message.ShouldContain("Route segment error");
+    [Theory]
+    [InlineData("{1Id}")]
+    [InlineData("{Id:1int}")]
+    public void Compile_NameStartingWithDigit_Throws(string segment)
+        => Should.Throw<Exception>(() => CreateCompiler().Compile(segment))
+            .Message.ShouldContain("Route segment error");
+
+    [Fact]
+    public void Compile_RouteForPropertyNameContainingDigit_Validates()
+    {
+        var matcher = CreateCompiler().Compile("page/{Page2:int}");
+
+        Should.NotThrow(() => matcher.Validate(typeof(DigitNamedParameterPage)));
+        matcher.Matches("page/7", new Dictionary<string, object>()).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Compile_RouteForPropertyNameContainingUnderscore_Validates()
+    {
+        var matcher = CreateCompiler().Compile("page/{My_Id:int}");
+
+        Should.NotThrow(() => matcher.Validate(typeof(UnderscoreNamedParameterPage)));
+        matcher.Matches("page/7", new Dictionary<string, object>()).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Compile_RouteForNonAsciiPropertyName_Validates()
+    {
+        var matcher = CreateCompiler().Compile("page/{Größe:int}");
+
+        Should.NotThrow(() => matcher.Validate(typeof(UnicodeNamedParameterPage)));
+        matcher.Matches("page/7", new Dictionary<string, object>()).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void Compile_DecomposedNonAsciiPropertyName_IsAccepted()
+        => Should.NotThrow(
+            () => CreateCompiler().Compile("page/{" + "Größe".Normalize(NormalizationForm.FormD) + ":int}"));
+
+    [Fact]
+    public void AddSegmentMatcher_NullKey_ThrowsArgumentNullException()
+        => Should.Throw<ArgumentNullException>(
+                () => new FluentRouterConfigurationOptionsBuilder().AddSegmentMatcher(null!, new EvenNumberMatcher()))
+            .ParamName.ShouldBe("segmentIdentifier");
+
+    [Theory]
+    [InlineData("date-time")]
+    [InlineData("trailing\n")]
+    [InlineData("with space")]
+    [InlineData("1leading")]
+    [InlineData("")]
+    public void AddSegmentMatcher_KeyThatCannotAppearInARoute_Throws(string key)
+        => Should.Throw<ArgumentException>(
+                () => new FluentRouterConfigurationOptionsBuilder().AddSegmentMatcher(key, new EvenNumberMatcher()))
+            .Message.ShouldContain("cannot be used in a route");
+
+    [Theory]
+    [InlineData("int32")]
+    [InlineData("date_time")]
+    [InlineData("_custom")]
+    public void AddSegmentMatcher_KeyIsUsableInARoute(string key)
+    {
+        var builder = new FluentRouterConfigurationOptionsBuilder();
+        builder.AddSegmentMatcher(key, new EvenNumberMatcher());
+        var compiler = new RouteMatcherCompiler(builder.BuildConfiguration());
+
+        var matcher = Should.NotThrow(() => compiler.Compile("n/{Value:" + key + "}"));
+
+        var routeValues = new Dictionary<string, object>();
+        matcher.Matches("n/4", routeValues).ShouldBeTrue();
+        routeValues["Value"].ShouldBe(4);
     }
 
     [Fact]

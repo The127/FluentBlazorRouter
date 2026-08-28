@@ -113,6 +113,21 @@ internal sealed class ShadowedNonPublicPage : ProtectedBasePage
     private new string Id { get; set; } = string.Empty;
 }
 
+internal sealed class DigitNamedParameterPage
+{
+    [Parameter] public int Page2 { get; set; }
+}
+
+internal sealed class UnderscoreNamedParameterPage
+{
+    [Parameter] public int My_Id { get; set; }
+}
+
+internal sealed class UnicodeNamedParameterPage
+{
+    [Parameter] public int Größe { get; set; }
+}
+
 internal class BasePage
 {
     [Parameter] public int Id { get; set; }

@@ -18,7 +18,7 @@ internal sealed class RouteMatcherCompiler
         foreach (var segment in fullRoute.Split("/"))
         {
             if (segment.StartsWith("{")) {
-                var match = Regex.Match(segment, "^{(?<parameter>[a-zA-Z]+)(?::(?<type>[a-zA-Z]+))?}$");
+                var match = Regex.Match(segment, $"^{{(?<parameter>{SegmentSyntax.Identifier})(?::(?<type>{SegmentSyntax.Identifier}))?}}$");
                 if (!match.Success)
                 {
                     throw new Exception($"Route segment error in '{fullRoute}' at '{segment}'.");
